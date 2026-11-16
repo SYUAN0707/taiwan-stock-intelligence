@@ -3,8 +3,14 @@ import os, json, time, datetime as dt
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-S=requests.Session(); S.headers.update({"User-Agent":"Mozilla/5.0 TaiwanStockDashboard/1.0"})
+S=requests.Session()
+retry=Retry(total=2,connect=2,read=2,status=2,backoff_factor=1,status_forcelist=(429,500,502,503,504),allowed_methods=frozenset(["GET"]),raise_on_status=False)
+adapter=HTTPAdapter(max_retries=retry,pool_connections=10,pool_maxsize=10)
+S.mount("https://",adapter);S.mount("http://",adapter)
+S.headers.update({"User-Agent":"Mozilla/5.0 TaiwanStockDashboard/1.0","Accept":"application/json,text/plain,*/*"})
 CACHE={}
 def cached(k,ttl,fn):
     item=CACHE.get(k)
@@ -78,7 +84,7 @@ def realtime_quotes(symbols):
         "https://mis.twse.com.tw/stock/api/getStockInfo.jsp",
         params={"ex_ch":"|".join(ex_ch),"json":"1","delay":"0","_":int(time.time()*1000)},
         headers={"Referer":"https://mis.twse.com.tw/stock/fibest.jsp"},
-        timeout=12
+        timeout=25
     )
     r.raise_for_status()
     payload=r.json()
