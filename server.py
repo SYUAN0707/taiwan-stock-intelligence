@@ -1,7 +1,7 @@
 """Taiwan stock dashboard API. No synthetic quotes are generated."""
 import os, json, time, datetime as dt
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 import requests
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 S=requests.Session(); S.headers.update({"User-Agent":"Mozilla/5.0 TaiwanStockDashboard/1.0"})
@@ -53,10 +53,74 @@ def t86():
         except Exception:pass
         d-=dt.timedelta(days=1)
     raise RuntimeError("近 12 日未取得有效 T86 資料")
+
+def realtime_quotes(symbols):
+    """Fetch current traded prices for up to 50 explicitly requested symbols.
+    Uses the public TWSE Market Information System quote endpoint; never substitutes
+    a previous close when no current trade is available.
+    """
+    if not symbols or len(symbols) > 50:
+        raise ValueError("一次最多查詢 50 檔股票")
+    ex_ch=[]
+    requested={}
+    for item in symbols:
+        parts=item.split(":")
+        if len(parts)!=2:
+            continue
+        code,market=parts[0].strip(),parts[1].strip().lower()
+        if not code.isalnum() or market not in ("tse","otc"):
+            continue
+        requested[code] = "上市" if market=="tse" else "上櫃"
+        ex_ch.append(f"{market}_{code}.tw")
+    if not ex_ch:
+        raise ValueError("沒有有效的股票代號")
+    r=S.get(
+        "https://mis.twse.com.tw/stock/api/getStockInfo.jsp",
+        params={"ex_ch":"|".join(ex_ch),"json":"1","delay":"0","_":int(time.time()*1000)},
+        headers={"Referer":"https://mis.twse.com.tw/stock/fibest.jsp"},
+        timeout=12
+    )
+    r.raise_for_status()
+    payload=r.json()
+    rows=[]
+    for x in payload.get("msgArray",[]):
+        code=str(x.get("c","")).strip()
+        if code not in requested:
+            continue
+        price=num(x.get("z"))
+        prev=num(x.get("y"))
+        rows.append({
+            "code":code,
+            "name":x.get("n",""),
+            "market":requested[code],
+            "price":price,
+            "previous_close":prev,
+            "change":round(price-prev,4) if price is not None and prev is not None else None,
+            "trade_date":x.get("d"),
+            "trade_time":x.get("t"),
+            "quote_source":"TWSE MIS 公開市況報導",
+            "status":"有最新成交" if price is not None else "目前無最新成交價"
+        })
+    return {
+        "updated_at":dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).isoformat(timespec="seconds"),
+        "items":rows,
+        "requested":len(ex_ch),
+        "source":"TWSE MIS 公開市況報導",
+        "disclaimer":"盤中最新成交價；若該股票尚無當日成交，不以昨收價冒充最新成交價。"
+    }
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p=urlparse(self.path).path
         if p=="/api/health":return self.send_json({"ok":True})
+        if p == "/api/realtime":
+            try:
+                symbols=parse_qs(urlparse(self.path).query).get("symbols",[""])[0].split(",")
+                key="rt:"+",".join(symbols)
+                v=cached(key,5,lambda:realtime_quotes(symbols));code=200
+            except Exception as e:
+                v={"error":str(e),"items":[]};code=502
+            return self.send_json(v,code)
         if p in ("/api/quotes","/api/t86"):
             try:v=cached(p,300 if p.endswith("quotes") else 900,quotes if p.endswith("quotes") else t86);code=200
             except Exception as e:v={"error":str(e)};code=502
