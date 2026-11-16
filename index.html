@@ -12,7 +12,34 @@ const API_BASE='https://taiwan-stock-intelligence-api.onrender.com';
 const state={quotes:[],t86:{},liveQuotes:{},liveStatus:{},view:'market',query:'',market:'全部市場',sort:'amount',watch:JSON.parse(localStorage.getItem('tw-watch')||'[]'),selected:null};
 let liveTimer=null,liveBusy=false;
 const $=id=>document.getElementById(id),fmt=(v,d=2)=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:d}),cls=v=>v>0?'up':v<0?'down':'',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function load(){ if(liveTimer){clearInterval(liveTimer);liveTimer=null} state.liveQuotes={};$('notice').textContent='正在向官方資料來源更新行情與法人資訊…';try{const [q,f]=await Promise.all([fetch(API_BASE+'/api/quotes').then(r=>{if(!r.ok)throw Error('行情 API 暫時無法取得');return r.json()}),fetch(API_BASE+'/api/t86').then(r=>r.ok?r.json():{rows:{},error:'法人資料暫時無法取得'})]);state.quotes=q.items||[];state.t86=f.rows||{};state.quoteInfo=q;state.t86Date=f.date||'';state.liveQuotes={};state.liveStatus={};$('updated').textContent='每日行情資料取得時間 '+(q.updated_at||'—');$('notice').textContent=(q.disclaimer||'')+(q.errors?.length?'；每日行情部分來源異常：'+q.errors.join('／'):'')+(f.error?'；法人資料：'+f.error:'');render();refreshLiveForAll();if(!liveTimer)liveTimer=setInterval(refreshLiveForAll,60000)}catch(e){$('notice').textContent='資料讀取失敗：'+e.message+'。請稍後重試；不顯示虛構行情。';$('content').innerHTML='<div class="panel empty">目前無法連線取得官方資料。請確認伺服器已啟動，或稍後重新載入。</div>'}}
+async function load(){
+ if(liveTimer){clearInterval(liveTimer);liveTimer=null}
+ state.liveQuotes={};state.liveStatus={};
+ $('notice').textContent='正在讀取官方上市櫃行情…';
+ try{
+  const qr=await fetch(API_BASE+'/api/quotes',{cache:'no-store'});
+  if(!qr.ok)throw Error('行情 API HTTP '+qr.status);
+  const q=await qr.json();
+  if(!Array.isArray(q.items))throw Error(q.error||'行情 API 回傳格式不正確');
+  state.quotes=q.items;state.quoteInfo=q;
+  $('updated').textContent='每日行情資料取得時間 '+(q.updated_at||'—');
+  let notice=q.disclaimer||'';
+  if(q.errors?.length)notice+='；部分市場資料來源異常：'+q.errors.join('／');
+  state.t86={};state.t86Date='';
+  try{
+   const fr=await fetch(API_BASE+'/api/t86',{cache:'no-store'});
+   if(!fr.ok)throw Error('法人 API HTTP '+fr.status);
+   const fj=await fr.json();state.t86=fj.rows||{};state.t86Date=fj.date||'';
+   if(fj.error)notice+='；法人資料：'+fj.error;
+  }catch(fe){notice+='；法人資料暫時無法取得（'+fe.message+'），行情仍可正常顯示。'}
+  $('notice').textContent=notice;
+  render();refreshLiveForAll();
+  if(!liveTimer)liveTimer=setInterval(refreshLiveForAll,60000);
+ }catch(e){
+  $('notice').textContent='行情讀取失敗：'+e.message+'。請稍後重試；不顯示虛構行情。';
+  $('content').innerHTML='<div class="panel empty">目前無法取得官方每日行情。請確認後端 API 與 Render 部署狀態，再重新載入。</div>';
+ }
+}
 function withLiveQuote(x){const live=state.liveQuotes[x.code];if(live)return {...x,...live};const status=state.liveStatus[x.code];return {...x,price:null,change:null,price_label:status?.label||'即時行情讀取中'};}
 function filtered(){let a=state.quotes.filter(x=>(state.market==='全部市場'||x.market===state.market)&&(!state.query||(x.code+x.name).toLowerCase().includes(state.query.toLowerCase()))).map(withLiveQuote);a.sort((x,y)=>{let k=state.sort;if(k==='change')return (y.change??-Infinity)-(x.change??-Infinity);if(k==='volume')return (y.volume||0)-(x.volume||0);if(k==='name')return x.code.localeCompare(y.code);return (y.amount||0)-(x.amount||0)});return a}
 function table(rows,showChips=false){if(!rows.length)return '<div class="empty">沒有符合條件的資料</div>';const displayRows=rows.map(withLiveQuote);return `<div class="tablewrap"><table><thead><tr><th>股票</th><th>市場</th><th>最新成交價／最近收盤價</th><th>漲跌</th><th>成交量（股）</th><th>成交金額（元）</th>${showChips?'<th>外資買賣超（張）</th>':''}<th>自選</th></tr></thead><tbody>${displayRows.map(x=>{let c=state.t86[x.code];return `<tr><td><span class="stock">${esc(x.name||'未提供名稱')}</span><span class="code">${esc(x.code)}</span></td><td><span class="tag">${esc(x.market)}</span></td><td>${fmt(x.price)} <span class="tag">${esc(x.price_label||(x.live_time?'最新成交':'最近收盤（非即時）'))}</span></td><td class="${cls(x.change)}">${x.change==null?'—':(x.change>0?'+':'')+fmt(x.change)}</td><td>${fmt(x.volume,0)}</td><td>${fmt(x.amount,0)}</td>${showChips?`<td class="${cls(c?.foreign_net_lots)}">${c?fmt(c.foreign_net_lots,0):'—'}</td>`:''}<td><button class="star ${state.watch.includes(x.code)?'on':''}" onclick="toggleWatch('${esc(x.code)}')">${state.watch.includes(x.code)?'★':'☆'}</button></td></tr>`}).join('')}</tbody></table></div>`}
