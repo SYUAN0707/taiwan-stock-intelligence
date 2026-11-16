@@ -49,7 +49,7 @@ async function refreshLiveForAll(){
   liveBusy=true;
   const rows=state.quotes;
   const chunks=[];
-  for(let i=0;i<rows.length;i+=50)chunks.push(rows.slice(i,i+50));
+  for(let i=0;i<rows.length;i+=5)chunks.push(rows.slice(i,i+5));
   let completed=0,success=0,failed=0,firstError='';
   for(const row of rows)state.liveStatus[row.code]={label:'即時行情讀取中'};
   $('notice').textContent='正在向 TWSE MIS 分批查詢全市場最新成交價／當日收盤價…';
@@ -91,7 +91,7 @@ async function refreshLiveForAll(){
       }
       completed++;
       $('notice').textContent='全市場即時行情查詢進度：'+completed+'/'+chunks.length+' 批；已取得 '+success+' 檔有效成交價'+(failed?'；失敗 '+failed+' 批（首個錯誤：'+firstError+'）':'')+'。未取得者不以每日舊收盤價代替。';
-      await new Promise(resolve=>setTimeout(resolve,1000));
+      await new Promise(resolve=>setTimeout(resolve,1200));
     }
   }
   try{
