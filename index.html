@@ -10,7 +10,7 @@
 <script>
 const API_BASE='https://taiwan-stock-intelligence-api.onrender.com';
 const state={quotes:[],t86:{},liveQuotes:{},liveStatus:{},view:'market',query:'',market:'全部市場',sort:'amount',watch:JSON.parse(localStorage.getItem('tw-watch')||'[]'),selected:null};
-let liveTimer=null;
+let liveTimer=null,liveBusy=false;
 const $=id=>document.getElementById(id),fmt=(v,d=2)=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:d}),cls=v=>v>0?'up':v<0?'down':'',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function load(){ if(liveTimer){clearInterval(liveTimer);liveTimer=null} state.liveQuotes={};$('notice').textContent='正在向官方資料來源更新行情與法人資訊…';try{const [q,f]=await Promise.all([fetch(API_BASE+'/api/quotes').then(r=>{if(!r.ok)throw Error('行情 API 暫時無法取得');return r.json()}),fetch(API_BASE+'/api/t86').then(r=>r.ok?r.json():{rows:{},error:'法人資料暫時無法取得'})]);state.quotes=q.items||[];state.t86=f.rows||{};state.quoteInfo=q;state.t86Date=f.date||'';state.liveQuotes={};state.liveStatus={};$('updated').textContent='每日行情資料取得時間 '+(q.updated_at||'—');$('notice').textContent=(q.disclaimer||'')+(q.errors?.length?'；每日行情部分來源異常：'+q.errors.join('／'):'')+(f.error?'；法人資料：'+f.error:'');render();refreshLiveForAll();if(!liveTimer)liveTimer=setInterval(refreshLiveForAll,60000)}catch(e){$('notice').textContent='資料讀取失敗：'+e.message+'。請稍後重試；不顯示虛構行情。';$('content').innerHTML='<div class="panel empty">目前無法連線取得官方資料。請確認伺服器已啟動，或稍後重新載入。</div>'}}
 function withLiveQuote(x){const live=state.liveQuotes[x.code];if(live)return {...x,...live};const status=state.liveStatus[x.code];return {...x,price:null,change:null,price_label:status?.label||'即時行情讀取中'};}
