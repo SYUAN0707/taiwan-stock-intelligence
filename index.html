@@ -49,8 +49,8 @@ async function refreshLiveForAll(){
   liveBusy=true;
   const rows=state.quotes;
   const chunks=[];
-  for(let i=0;i<rows.length;i+=50)chunks.push(rows.slice(i,i+50));
-  let completed=0,success=0,failed=0;
+  for(let i=0;i<rows.length;i+=10)chunks.push(rows.slice(i,i+10));
+  let completed=0,success=0,failed=0,firstError='';
   for(const row of rows)state.liveStatus[row.code]={label:'即時行情讀取中'};
   $('notice').textContent='正在向 TWSE MIS 分批查詢全市場最新成交價／當日收盤價…';
   render();
@@ -63,7 +63,7 @@ async function refreshLiveForAll(){
         const url=API_BASE+'/api/realtime?symbols='+encodeURIComponent(symbols.join(','));
         const response=await fetch(url);
         const data=await response.json();
-        if(!response.ok)throw new Error(data.error||'即時行情來源暫時無法取得');
+        if(!response.ok)throw new Error('HTTP '+response.status+'：'+(data.error||'即時行情來源暫時無法取得'));
         const found=new Map((data.items||[]).map(x=>[x.code,x]));
         for(const row of batch){
           const q=found.get(row.code);
@@ -83,19 +83,21 @@ async function refreshLiveForAll(){
         }
       }catch(error){
         failed++;
+        if(!firstError)firstError=String(error.message||error);
         for(const row of batch){
           state.liveQuotes[row.code]={price:null,change:null,live_time:'',trade_date:'',price_label:'即時行情讀取失敗',received_at:Date.now()};
           state.liveStatus[row.code]={label:'即時行情讀取失敗'};
         }
       }
       completed++;
-      $('notice').textContent='全市場即時行情查詢進度：'+completed+'/'+chunks.length+' 批；已取得 '+success+' 檔有效成交價'+(failed?'；失敗 '+failed+' 批':'')+'。未取得者不以每日舊收盤價代替。';
+      $('notice').textContent='全市場即時行情查詢進度：'+completed+'/'+chunks.length+' 批；已取得 '+success+' 檔有效成交價'+(failed?'；失敗 '+failed+' 批（首個錯誤：'+firstError+'）':'')+'。未取得者不以每日舊收盤價代替。';
+      await new Promise(resolve=>setTimeout(resolve,300));
     }
   }
   try{
-    await Promise.all(Array.from({length:Math.min(3,chunks.length)},()=>worker()));
+    await worker();
     render();
-    $('notice').textContent='全市場行情更新完成：成功取得 '+success+' 檔最新成交／收盤價；失敗 '+failed+' 批。未取得有效成交價的股票會明確標示，不會以舊收盤價冒充。';
+    $('notice').textContent='全市場行情更新完成：成功取得 '+success+' 檔最新成交／收盤價；失敗 '+failed+' 批。'+(firstError?'第一個錯誤：'+firstError+'。':'')+'未取得有效成交價的股票會明確標示，不會以舊收盤價冒充。';
   }finally{liveBusy=false;}
 }
 function metrics(){let all=state.quotes,up=all.filter(x=>(x.change||0)>0).length,down=all.filter(x=>(x.change||0)<0).length,amt=all.reduce((s,x)=>s+(x.amount||0),0);return `<div class="metrics"><div class="metric"><label>上市櫃資料筆數</label><strong>${fmt(all.length,0)}</strong><small>官方最新日行情</small></div><div class="metric"><label>上漲檔數</label><strong class="up">${fmt(up,0)}</strong><small>依官方漲跌價差欄位</small></div><div class="metric"><label>下跌檔數</label><strong class="down">${fmt(down,0)}</strong><small>依官方漲跌價差欄位</small></div><div class="metric"><label>成交金額合計</label><strong>${amt?fmt(amt/1e8,1)+' 億':'—'}</strong><small>已取得資料加總</small></div></div>`}
