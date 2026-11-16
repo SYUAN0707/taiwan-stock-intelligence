@@ -139,7 +139,7 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
     def send_json(self,v,code=200):
         b=json.dumps(v,ensure_ascii=False).encode()
-        self.send_response(code);self.send_header("Content-Type","application/json; charset=utf-8");self.send_header("Content-Length",str(len(b)));self.send_header("Cache-Control","no-store");self.end_headers();self.wfile.write(b)
+        self.send_response(code);self.send_header("Content-Type","application/json; charset=utf-8");self.send_header("Content-Length",str(len(b)));self.send_header("Cache-Control","no-store");self.send_header("Access-Control-Allow-Origin","https://taiwan-stock-intelligence.onrender.com");self.send_header("Vary","Origin");self.end_headers();self.wfile.write(b)
 if __name__=="__main__":
     port=int(os.environ.get("PORT","8000"))
     print("Taiwan Stock Dashboard listening on",port)
