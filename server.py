@@ -89,6 +89,16 @@ def realtime_quotes(symbols):
             continue
         price=num(x.get("z"))
         prev=num(x.get("y"))
+        trade_date=str(x.get("d") or "")
+        now_tw=dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
+        today=now_tw.strftime("%Y%m%d")
+        market_open=(now_tw.weekday()<5 and (now_tw.hour>9 or (now_tw.hour==9 and now_tw.minute>=0)) and (now_tw.hour<13 or (now_tw.hour==13 and now_tw.minute<30)))
+        if market_open and trade_date==today:
+            phase_label="盤中最新成交"
+        elif trade_date==today and (now_tw.hour>13 or (now_tw.hour==13 and now_tw.minute>=30)):
+            phase_label="今日收盤"
+        else:
+            phase_label="最近交易日成交"
         rows.append({
             "code":code,
             "name":x.get("n",""),
@@ -96,8 +106,9 @@ def realtime_quotes(symbols):
             "price":price,
             "previous_close":prev,
             "change":round(price-prev,4) if price is not None and prev is not None else None,
-            "trade_date":x.get("d"),
+            "trade_date":trade_date,
             "trade_time":x.get("t"),
+            "phase_label":phase_label,
             "quote_source":"TWSE MIS 公開市況報導",
             "status":"有最新成交" if price is not None else "目前無最新成交價"
         })
