@@ -129,16 +129,15 @@ def stock_history(code):
     return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"market_quote_date":market_cutoff,"history_source_latest_date":raw_latest,"date_sync_status":sync_status,"date_sync_note":sync_note,"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":f"{sync_note} 圖表僅使用不晚於市場總覽確認日期的資料；共近 40 個交易日。上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
 
 def institutional():
-    """Official TPEx institutional flow, restricted to listed OTC common stocks."""
-    url = "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
-    r = S.get(url, timeout=30)
-    r.raise_for_status()
-    rows = r.json()
-    if not isinstance(rows, list) or not rows:
-        raise ValueError("櫃買中心法人資料目前沒有有效資料")
-
-    # Restrict to the OTC common-stock universe; institutional data has its own publication date.
+    """Merge same-day official TWSE listed and TPEx OTC institutional data."""
     quote_data = cached("/api/quotes", 300, quotes)
+    listed_codes = {
+        str(x.get("code", "")).strip()
+        for x in quote_data.get("items", [])
+        if x.get("market") == "上市"
+        and str(x.get("code", "")).strip().isdigit()
+        and len(str(x.get("code", "")).strip()) == 4
+    }
     otc_codes = {
         str(x.get("code", "")).strip()
         for x in quote_data.get("items", [])
@@ -146,8 +145,8 @@ def institutional():
         and str(x.get("code", "")).strip().isdigit()
         and len(str(x.get("code", "")).strip()) == 4
     }
-    if not otc_codes:
-        raise ValueError("目前無法取得上櫃普通股清單，暫停法人排行")
+    if not listed_codes or not otc_codes:
+        raise ValueError("上市或上櫃普通股清單不完整，暫停全市場法人排行")
 
     def integer(v):
         if v is None: return None
@@ -156,22 +155,97 @@ def institutional():
         try: return int(float(z))
         except (ValueError, TypeError): return None
 
-    items = []
-    for raw in rows:
-        if not isinstance(raw, dict): continue
+    # TWSE T86 is date-scoped. Search backward for the latest published
+    # trading-day report; resolve columns by exact official field names.
+    twse_payload = None
+    twse_day = ""
+    today = dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
+    for offset in range(0, 11):
+        target = today - dt.timedelta(days=offset)
+        if target.weekday() >= 5:
+            continue
+        day_arg = target.strftime("%Y%m%d")
+        url = "https://www.twse.com.tw/rwd/zh/fund/T86"
+        response = S.get(url, params={
+            "date": day_arg, "selectType": "ALL", "response": "json"
+        }, timeout=30)
+        response.raise_for_status()
+        candidate = response.json()
+        if candidate.get("stat") == "OK" and candidate.get("data"):
+            twse_payload = candidate
+            twse_day = roc_date(candidate.get("date")) or target.isoformat()
+            break
+    if not twse_payload:
+        raise ValueError("證交所上市三大法人 T86 最近 10 個日曆日尚無有效資料")
+
+    fields = twse_payload.get("fields", [])
+    required = {
+        "code": "證券代號",
+        "name": "證券名稱",
+        "foreign": "外陸資買賣超股數(不含外資自營商)",
+        "trust": "投信買賣超股數",
+        "dealer": "自營商買賣超股數",
+    }
+    indexes = {}
+    for key, field_name in required.items():
+        if field_name not in fields:
+            raise ValueError("證交所 T86 欄位缺少或改名：" + field_name)
+        indexes[key] = fields.index(field_name)
+
+    listed_items = []
+    for row in twse_payload.get("data", []):
+        if not isinstance(row, list) or len(row) <= max(indexes.values()):
+            continue
+        code = str(row[indexes["code"]]).strip()
+        if code not in listed_codes:
+            continue
+        foreign = integer(row[indexes["foreign"]])
+        trust = integer(row[indexes["trust"]])
+        dealer = integer(row[indexes["dealer"]])
+        if foreign is None or trust is None or dealer is None:
+            continue
+        listed_items.append({
+            "code": code,
+            "name": str(row[indexes["name"]]).strip(),
+            "market": "上市",
+            "trade_date": twse_day,
+            "foreign_net_shares": foreign,
+            "trust_net_shares": trust,
+            "dealer_net_shares": dealer,
+            "total_net_shares": foreign + trust + dealer,
+            "unit": "股",
+            "source": "TWSE 官方三大法人買賣超日報 T86"
+        })
+    if not listed_items:
+        raise ValueError("證交所 T86 未取得可與上市行情清單對應的普通股法人資料")
+
+    # TPEx publishes the current daily file independently. Keep its own
+    # date and require exact date alignment before producing a combined rank.
+    tpex_url = "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
+    tpex_response = S.get(tpex_url, timeout=30)
+    tpex_response.raise_for_status()
+    tpex_rows = tpex_response.json()
+    if not isinstance(tpex_rows, list) or not tpex_rows:
+        raise ValueError("櫃買中心上櫃法人資料目前沒有有效資料")
+
+    tpex_items = []
+    for raw in tpex_rows:
+        if not isinstance(raw, dict):
+            continue
         code = str(raw.get("SecuritiesCompanyCode") or "").strip()
         day = roc_date(raw.get("Date"))
-        # TPEx endpoint also contains ETFs, ETNs and other securities.
-        # Keep only four-digit common stocks present in the OTC quote dataset.
         if code not in otc_codes or not day:
             continue
-        foreign = integer(raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference") if raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference") is not None else raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference "))
+        foreign_raw = raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference")
+        if foreign_raw is None:
+            foreign_raw = raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference ")
+        foreign = integer(foreign_raw)
         trust = integer(raw.get("SecuritiesInvestmentTrustCompanies-Difference"))
         dealer = integer(raw.get("Dealers-Difference"))
         if foreign is None or trust is None or dealer is None:
             continue
         total = integer(raw.get("TotalDifference"))
-        items.append({
+        tpex_items.append({
             "code": code,
             "name": str(raw.get("CompanyName") or "").strip(),
             "market": "上櫃",
@@ -183,21 +257,33 @@ def institutional():
             "unit": "股",
             "source": "TPEx 官方 OpenAPI／政府資料開放平臺資料集 11856"
         })
+    if not tpex_items:
+        raise ValueError("櫃買中心未取得可與上櫃行情清單對應的普通股法人資料")
+    tpex_dates = sorted({x["trade_date"] for x in tpex_items})
+    if len(tpex_dates) != 1:
+        raise ValueError("櫃買中心法人資料包含多個交易日期，已停止合併排行")
+    tpex_day = tpex_dates[0]
 
-    if not items:
-        raise ValueError("上櫃普通股法人資料為空，或官方欄位格式已變更；不顯示舊資料或推測數字")
-    dates = sorted({x["trade_date"] for x in items})
-    if len(dates) != 1:
-        raise ValueError("櫃買中心法人資料包含多個交易日期，已停止顯示")
+    if twse_day != tpex_day:
+        raise ValueError(
+            f"上市法人資料日期為 {twse_day}，上櫃法人資料日期為 {tpex_day}；"
+            "為避免混合不同交易日造成錯誤排行，暫不產生全市場前10名。"
+        )
+
+    items = listed_items + tpex_items
     return {
-        "market": "上櫃",
-        "trade_date": dates[0],
+        "market": "上市＋上櫃",
+        "trade_date": twse_day,
+        "market_dates": {"上市": twse_day, "上櫃": tpex_day},
         "unit": "股",
         "count": len(items),
+        "counts": {"上市": len(listed_items), "上櫃": len(tpex_items)},
         "items": items,
-        "source_url": "https://data.gov.tw/dataset/11856",
-        "license_url": "https://data.gov.tw/license",
-        "disclaimer": "僅包含上櫃普通股（排除 ETF、ETN、權證等非普通股證券）；法人資料日期依櫃買中心該資料集標示，與行情日期分開呈現；數值單位為股。外資為不含外資自營商。上市個股法人資料暫不提供。"
+        "sources": {
+            "上市": "https://www.twse.com.tw/zh/trading/foreign/t86.html",
+            "上櫃": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
+        },
+        "disclaimer": "合併證交所上市 T86 與櫃買中心上櫃三大法人資料；僅納入行情清單中的四碼普通股，排除 ETF、ETN、權證等非普通股。只有兩市場資料日期完全相同時才產生全市場排行。外資欄位為外陸資買賣超（不含外資自營商），自營商為自行買賣與避險合計；單位為股。"
     }
 
 class Handler(SimpleHTTPRequestHandler):
