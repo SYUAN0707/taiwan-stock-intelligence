@@ -26,7 +26,7 @@
   async function loadInst() {
     const r = await fetch(API + '/api/institutional', {cache:'no-store'});
     const d = await r.json();
-    if (!r.ok || !Array.isArray(d.items) || !d.items.length) throw Error(d.error || '上櫃法人資料暫時無法取得');
+    if (!r.ok || !Array.isArray(d.items) || !d.items.length) throw Error(d.error || '上市＋上市＋上櫃法人資料暫時無法取得');
     inst = d.items; instInfo = d;
   }
   const quote = code => quotes.find(x=>x.code===code);
@@ -92,7 +92,7 @@
     const chain=isTsmc?tsmcChain:[];
     $('pageTitle').textContent=(q.name||'個股')+'（'+q.code+'）';
     $('pageSub').textContent='每日收盤行情｜'+esc(q.market)+'｜資料日期 '+esc(q.trade_date||'—');
-    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>每日收盤行情</h2><span class="tag">'+esc(q.market)+'</span></div><div class="detail"><div><small>收盤價</small><b>'+n(q.price)+'</b></div><div><small>漲跌價差</small><b class="'+cls(q.change)+'">'+n(q.change)+'</b></div><div><small>成交量（股）</small><b>'+n(q.volume)+'</b></div><div><small>成交金額（元）</small><b>'+n(q.amount)+'</b></div><div><small>開盤</small><b>'+n(q.open)+'</b></div><div><small>最高／最低</small><b>'+n(q.high)+'／'+n(q.low)+'</b></div><div><small>交易日期</small><b>'+esc(q.trade_date||'—')+'</b></div><div><small>行情來源</small><b>'+esc(q.quote_source||'交易所每日資料')+'</b></div></div></section><section class="panel"><h2>近 40 個交易日 K 線</h2><div id="historyChart"></div></section><section class="panel"><h2>技術面解讀（短、中、長期觀察）</h2><div id="historyTechnical"></div></section><section class="panel"><h2>上櫃法人資料</h2>'+(i?'<div class="detail"><div><small>外資（不含外資自營商）</small><b>'+n(i.foreign_net_shares)+' 股</b></div><div><small>投信</small><b>'+n(i.trust_net_shares)+' 股</b></div><div><small>自營商</small><b>'+n(i.dealer_net_shares)+' 股</b></div><div><small>三大法人合計</small><b>'+n(i.total_net_shares)+' 股</b></div></div><p class="sub">資料日期 '+esc(i.trade_date)+'；單位為股。上市個股法人資料依目前設定不提供。</p>':(q.market==='上市'?'此股票為上市股票，依目前設定不提供上市個股法人資料。':'此股票尚無可用的上櫃法人資料。'))+'</section><section class="panel"><h2>相關新聞</h2>'+news(q)+'</section><section class="panel"><h2>同產業／產業關聯權值股</h2>'+(peers.length?'<div class="chainlist">'+peerCards(peers)+'</div>':'<p class="sub">目前尚無已整理並完成來源查證的同產業權值股名單。</p>')+'</section><section class="panel"><h2>下游／供應鏈廠商</h2>'+(chain.length?'<div class="chainlist">'+peerCards(chain)+'</div><p class="sub">此為依你提供的台積電關聯廠商清單建立的初始分類；各公司實際供應、客戶關係及產品項目仍須逐一依年報、法說會或公開資訊查證，不代表已證實的直接供應關係。</p>':'<p class="sub">此股票尚未建立經查證的供應鏈關係，避免把同產業公司直接標示為上下游廠商。</p>')+'</section><button class="secondary" id="backToQuotes">返回每日收盤行情</button>';
+    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>每日收盤行情</h2><span class="tag">'+esc(q.market)+'</span></div><div class="detail"><div><small>收盤價</small><b>'+n(q.price)+'</b></div><div><small>漲跌價差</small><b class="'+cls(q.change)+'">'+n(q.change)+'</b></div><div><small>成交量（股）</small><b>'+n(q.volume)+'</b></div><div><small>成交金額（元）</small><b>'+n(q.amount)+'</b></div><div><small>開盤</small><b>'+n(q.open)+'</b></div><div><small>最高／最低</small><b>'+n(q.high)+'／'+n(q.low)+'</b></div><div><small>交易日期</small><b>'+esc(q.trade_date||'—')+'</b></div><div><small>行情來源</small><b>'+esc(q.quote_source||'交易所每日資料')+'</b></div></div></section><section class="panel"><h2>近 40 個交易日 K 線</h2><div id="historyChart"></div></section><section class="panel"><h2>技術面解讀（短、中、長期觀察）</h2><div id="historyTechnical"></div></section><section class="panel"><h2>上櫃法人資料</h2>'+(i?'<div class="detail"><div><small>外資（不含外資自營商）</small><b>'+n(i.foreign_net_shares)+' 股</b></div><div><small>投信</small><b>'+n(i.trust_net_shares)+' 股</b></div><div><small>自營商</small><b>'+n(i.dealer_net_shares)+' 股</b></div><div><small>三大法人合計</small><b>'+n(i.total_net_shares)+' 股</b></div></div><p class="sub">資料日期 '+esc(i.trade_date)+'；單位為股。上市個股法人資料依目前設定不提供。</p>':(q.market==='上市'?'此股票目前沒有可用的全市場法人資料。':'此股票目前沒有可用的全市場法人資料。'))+'</section><section class="panel"><h2>相關新聞</h2>'+news(q)+'</section><section class="panel"><h2>同產業／產業關聯權值股</h2>'+(peers.length?'<div class="chainlist">'+peerCards(peers)+'</div>':'<p class="sub">目前尚無已整理並完成來源查證的同產業權值股名單。</p>')+'</section><section class="panel"><h2>下游／供應鏈廠商</h2>'+(chain.length?'<div class="chainlist">'+peerCards(chain)+'</div><p class="sub">此為依你提供的台積電關聯廠商清單建立的初始分類；各公司實際供應、客戶關係及產品項目仍須逐一依年報、法說會或公開資訊查證，不代表已證實的直接供應關係。</p>':'<p class="sub">此股票尚未建立經查證的供應鏈關係，避免把同產業公司直接標示為上下游廠商。</p>')+'</section><button class="secondary" id="backToQuotes">返回每日收盤行情</button>';
     loadHistory(code);
     $('backToQuotes').onclick=()=>{document.querySelector('nav button[data-view="market"]')?.click();};
     document.querySelectorAll('.open-stock').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
@@ -121,7 +121,7 @@
       }
       html+='</div></section>';
     }
-    html+='<div class="footer">來源：<a href="https://data.gov.tw/dataset/11856" target="_blank" rel="noopener">政府資料開放平臺 11856</a>／<a href="https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading" target="_blank" rel="noopener">櫃買中心 OpenAPI</a>。</div><section class="panel" id="rankDetail" hidden></section>';
+    html+='<div class="footer">來源：<a href="https://www.twse.com.tw/zh/trading/foreign/t86.html" target="_blank" rel="noopener">證交所上市 T86</a>／<a href="https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading" target="_blank" rel="noopener">櫃買中心上櫃 OpenAPI</a>。</div><section class="panel" id="rankDetail" hidden></section>';
     $('content').innerHTML=html;
     document.querySelectorAll('.rank-stock').forEach(b=>b.onclick=()=>{
       const x=inst.find(z=>z.code===b.dataset.code),key=b.dataset.key,val=x[key],box=$('rankDetail');
@@ -153,7 +153,7 @@
   }
   async function openPage(view) {
     if(view==='chips'){
-      $('pageTitle').textContent='法人買賣超排行';$('content').innerHTML='<div class="panel loading">正在載入上櫃法人資料…</div>';
+      $('pageTitle').textContent='法人買賣超排行';$('content').innerHTML='<div class="panel loading">正在載入上市＋上櫃法人資料…</div>';
       try{if(!quotes.length)await loadQuotes();await loadInst();showRanks();}
       catch(e){$('content').innerHTML='<section class="panel"><h2>上櫃法人資料暫時無法取得</h2><p>'+esc(e.message)+'</p><p class="sub">不會以舊資料或推測數字補值。</p></section>';}
     } else if(view==='supply') {if(!quotes.length)try{await loadQuotes()}catch{} showSupply();}
