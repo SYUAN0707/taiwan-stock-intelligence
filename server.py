@@ -90,7 +90,7 @@ def institutional():
         # Keep only four-digit common stocks present in the OTC quote dataset.
         if code not in otc_codes or not day:
             continue
-        foreign = integer(raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference"))
+        foreign = integer(raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference") if raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference") is not None else raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference "))
         trust = integer(raw.get("SecuritiesInvestmentTrustCompanies-Difference"))
         dealer = integer(raw.get("Dealers-Difference"))
         if foreign is None or trust is None or dealer is None:
@@ -142,7 +142,7 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
     def send_json(self,v,code=200):
         b=json.dumps(v,ensure_ascii=False).encode()
-        self.send_response(code);self.send_header("Content-Type","application/json; charset=utf-8");self.send_header("Content-Length",str(len(b)));self.send_header("Cache-Control","no-store");self.send_header("Access-Control-Allow-Origin","https://taiwan-stock-intelligence.onrender.com");self.send_header("Vary","Origin");self.end_headers();self.wfile.write(b)
+        self.send_response(code);self.send_header("Content-Type","application/json; charset=utf-8");self.send_header("Content-Length",str(len(b)));self.send_header("Cache-Control","no-store");self.send_header("Access-Control-Allow-Origin","*");self.send_header("Vary","Origin");self.end_headers();self.wfile.write(b)
 if __name__=="__main__":
     port=int(os.environ.get("PORT","8000"))
     print("Taiwan Stock Dashboard listening on",port)
