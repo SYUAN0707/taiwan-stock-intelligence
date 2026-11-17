@@ -111,11 +111,22 @@ def stock_history(code):
     rows = []
     for yy,mm in reversed(months):
         rows.extend(history_month(code, stock["market"], yy, mm))
-    unique = {x["date"]:x for x in rows if x.get("date") and x["date"] <= market_cutoff}
+    raw_unique = {x["date"]:x for x in rows if x.get("date")}
+    raw_latest = max(raw_unique) if raw_unique else None
+    unique = {day:x for day,x in raw_unique.items() if day <= market_cutoff}
     result = sorted(unique.values(), key=lambda x:x["date"])[-40:]
     if len(result) < 20:
         raise ValueError(f"截至市場總覽行情日期 {market_cutoff}，官方歷史資料僅取得 {len(result)} 個交易日，至少需要 20 日才能計算月線")
-    return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"market_quote_date":market_cutoff,"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":f"圖表已限制在市場總覽確認行情日期 {market_cutoff}（不顯示較新的歷史日資料）；共近 40 個交易日。上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
+    if raw_latest and raw_latest > market_cutoff:
+        sync_status = "history_ahead_filtered"
+        sync_note = f"歷史資料來源已出現 {raw_latest}，但市場總覽最新確認日期仍為 {market_cutoff}；為避免日期不一致，已排除較新資料。"
+    elif raw_latest and raw_latest < market_cutoff:
+        sync_status = "history_behind"
+        sync_note = f"市場總覽已更新至 {market_cutoff}，但個股歷史資料目前僅到 {raw_latest}；線圖暫以可取得的官方資料呈現。"
+    else:
+        sync_status = "aligned"
+        sync_note = f"個股線圖與市場總覽均截至 {market_cutoff}。"
+    return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"market_quote_date":market_cutoff,"history_source_latest_date":raw_latest,"date_sync_status":sync_status,"date_sync_note":sync_note,"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":f"{sync_note} 圖表僅使用不晚於市場總覽確認日期的資料；共近 40 個交易日。上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
 
 def institutional():
     """Official TPEx institutional flow, restricted to listed OTC common stocks."""
