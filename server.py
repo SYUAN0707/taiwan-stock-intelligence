@@ -96,6 +96,11 @@ def stock_history(code):
     stock = next((x for x in qdata.get("items",[]) if x.get("code")==code), None)
     if not stock:
         raise ValueError("目前官方行情清單找不到此股票，暫不查詢歷史資料")
+    # The chart must never show a trading day newer than the latest
+    # confirmed daily quote date for this stock's market.
+    market_cutoff = stock.get("trade_date")
+    if not market_cutoff:
+        raise ValueError("市場總覽尚未提供此市場的確認行情日期，暫停顯示歷史 K 線")
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
     months = []
     y, m = now.year, now.month
@@ -106,11 +111,11 @@ def stock_history(code):
     rows = []
     for yy,mm in reversed(months):
         rows.extend(history_month(code, stock["market"], yy, mm))
-    unique = {x["date"]:x for x in rows}
+    unique = {x["date"]:x for x in rows if x.get("date") and x["date"] <= market_cutoff}
     result = sorted(unique.values(), key=lambda x:x["date"])[-40:]
     if len(result) < 20:
-        raise ValueError(f"官方歷史資料目前僅取得 {len(result)} 個交易日，至少需要 20 日才能計算月線")
-    return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":"近 40 個交易日官方 OHLCV 歷史資料；上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
+        raise ValueError(f"截至市場總覽行情日期 {market_cutoff}，官方歷史資料僅取得 {len(result)} 個交易日，至少需要 20 日才能計算月線")
+    return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"market_quote_date":market_cutoff,"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":f"圖表已限制在市場總覽確認行情日期 {market_cutoff}（不顯示較新的歷史日資料）；共近 40 個交易日。上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
 
 def institutional():
     """Official TPEx institutional flow, restricted to listed OTC common stocks."""
