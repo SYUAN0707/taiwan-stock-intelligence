@@ -57,7 +57,7 @@ def quotes():
 def history_month(code, market, year, month):
     """Fetch one official monthly OHLCV table for a single listed/OTC stock."""
     if market == "上市":
-        url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY"
+        url = "https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY"
         params = {"response":"json","date":f"{year}{month:02d}01","stockNo":code}
         r = S.get(url, params=params, timeout=25); r.raise_for_status()
         payload = r.json()
