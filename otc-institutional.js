@@ -31,12 +31,12 @@
   }
   const quote = code => quotes.find(x=>x.code===code);
   function chart(q) {
-    const vals=[q.low,q.open,q.close,q.high].map(Number);
+    const close=q.close??q.price; const vals=[q.low,q.open,close,q.high].map(Number);
     if(vals.some(x=>!Number.isFinite(x))) return '<p class="sub">官方當日 OHLC 資料不足，暫不繪製K線。</p>';
     const min=Math.min(...vals), max=Math.max(...vals), span=Math.max(max-min,Math.abs(max)*.01,0.01);
     const y=v=>20+(max-v)/span*180;
-    const up=q.close>=q.open, color=up?'#d84a4a':'#15966a';
-    return '<div class="chartbox"><svg viewBox="0 0 460 230" role="img" aria-label="單日 OHLC K 線圖"><line x1="48" y1="20" x2="440" y2="20" stroke="#e7eaf0"/><line x1="48" y1="110" x2="440" y2="110" stroke="#e7eaf0"/><line x1="48" y1="200" x2="440" y2="200" stroke="#e7eaf0"/><text x="5" y="'+(y(max)+4)+'" font-size="11" fill="#758092">'+n(max)+'</text><text x="5" y="'+(y(min)+4)+'" font-size="11" fill="#758092">'+n(min)+'</text><line x1="245" y1="'+y(q.high)+'" x2="245" y2="'+y(q.low)+'" stroke="'+color+'" stroke-width="3"/><rect x="220" y="'+Math.min(y(q.open),y(q.close))+'" width="50" height="'+Math.max(3,Math.abs(y(q.open)-y(q.close)))+'" fill="'+(up?'#fff':'#15966a')+'" stroke="'+color+'" stroke-width="3"/><text x="220" y="222" font-size="12" fill="#758092">當日</text></svg><div class="chartlegend"><span>開盤 '+n(q.open)+'</span><span>最高 '+n(q.high)+'</span><span>最低 '+n(q.low)+'</span><span>收盤 '+n(q.price)+'</span></div></div>';
+    const up=close>=q.open, color=up?'#d84a4a':'#15966a';
+    return '<div class="chartbox"><svg viewBox="0 0 460 230" role="img" aria-label="單日 OHLC K 線圖"><line x1="48" y1="20" x2="440" y2="20" stroke="#e7eaf0"/><line x1="48" y1="110" x2="440" y2="110" stroke="#e7eaf0"/><line x1="48" y1="200" x2="440" y2="200" stroke="#e7eaf0"/><text x="5" y="'+(y(max)+4)+'" font-size="11" fill="#758092">'+n(max)+'</text><text x="5" y="'+(y(min)+4)+'" font-size="11" fill="#758092">'+n(min)+'</text><line x1="245" y1="'+y(q.high)+'" x2="245" y2="'+y(q.low)+'" stroke="'+color+'" stroke-width="3"/><rect x="220" y="'+Math.min(y(q.open),y(close))+'" width="50" height="'+Math.max(3,Math.abs(y(q.open)-y(q.close)))+'" fill="'+(up?'#fff':'#15966a')+'" stroke="'+color+'" stroke-width="3"/><text x="220" y="222" font-size="12" fill="#758092">當日</text></svg><div class="chartlegend"><span>開盤 '+n(q.open)+'</span><span>最高 '+n(q.high)+'</span><span>最低 '+n(q.low)+'</span><span>收盤 '+n(q.price)+'</span></div></div>';
   }
   function technical(q) {
     const diff=Number(q.close??q.price)-Number(q.open);
