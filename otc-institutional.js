@@ -1,5 +1,5 @@
 (() => {
-  const API = 'https://taiwan-stock-intelligence-api.onrender.com';
+  const API = 'https://taiwan-stock-test-api.onrender.com';
   let inst = [], instInfo = null, quotes = [], selectedRank = null;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -107,16 +107,24 @@
     });
   }
   function showSupply() {
-    $('pageTitle').textContent='權值股下游供應鏈搜尋';
-    $('pageSub').textContent='輸入權值股代號或名稱，查看已整理的產業關聯廠商';
-    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>搜尋權值股</h2></div><div class="filters"><input id="chainSearch" placeholder="例如：台積電、2330" value="台積電"><button class="primary" id="chainGo">搜尋</button></div><div id="chainResults"></div></section>';
+    $('pageTitle').textContent='權值股／個股搜尋';
+    $('pageSub').textContent='可搜尋目前官方行情清單中的所有上市、上櫃股票；供應鏈關係僅顯示已查證資料';
+    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>搜尋股票</h2></div><div class="filters"><input id="chainSearch" placeholder="輸入股票代號或名稱，例如 2330、台積電"><button class="primary" id="chainGo">搜尋</button></div><div id="chainResults"></div></section>';
     const run=()=>{
-      const v=$('chainSearch').value.trim().toLowerCase();
-      const match=['2330','台積電','tsmc'].some(x=>v.includes(x));
-      $('chainResults').innerHTML=match?'<section class="panel"><h2>台積電（2330）・半導體</h2><p class="sub">以下是依使用者提供名單整理的關聯廠商與角色，尚待公開文件逐筆核實直接供應關係。</p><div class="chainlist">'+peerCards(tsmcChain)+'</div></section>':'<section class="panel"><p>目前沒有「'+esc(v)+'」的已整理供應鏈資料。可先搜尋台積電（2330）；其他權值股將在查證公開資料後逐步加入。</p></section>';
+      const raw=$('chainSearch').value.trim();
+      const v=raw.toLowerCase();
+      if(!v){$('chainResults').innerHTML='<section class="panel"><p>請輸入股票代號或名稱。</p></section>';return;}
+      const q=quotes.find(x=>String(x.code).toLowerCase()===v || String(x.name).toLowerCase()===v)
+        || quotes.find(x=>(String(x.code)+' '+String(x.name)).toLowerCase().includes(v));
+      if(!q){$('chainResults').innerHTML='<section class="panel"><p>行情清單中找不到「'+esc(raw)+'」，請確認代號或名稱。</p></section>';return;}
+      const base='<section class="panel"><h2>'+esc(q.name)+'（'+esc(q.code)+'）・'+esc(q.market)+'</h2><p>官方收盤價：'+n(q.price)+' 元；資料日期：'+esc(q.trade_date||'—')+'</p><button class="secondary" id="chainStockDetail">查看個股詳細頁</button></section>';
+      const relation=q.code==='2330'?'<section class="panel"><h2>台積電已整理的產業關聯廠商</h2><p class="sub">以下為初步關聯分類；直接供應／客戶關係仍須逐筆依公開文件核實。</p><div class="chainlist">'+peerCards(tsmcChain)+'</div></section>':'<section class="panel"><h2>供應鏈資料尚未建置</h2><p>目前可以搜尋這檔股票，但尚未完成此公司的供應商、客戶及上下游關係查證，因此不會推測或列出未證實廠商。</p></section>';
+      $('chainResults').innerHTML=base+relation;
+      $('chainStockDetail').onclick=()=>showStock(q.code);
       document.querySelectorAll('.open-stock').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
     };
-    $('chainGo').onclick=run;$('chainSearch').onkeydown=e=>{if(e.key==='Enter')run();};run();
+    $('chainGo').onclick=run;
+    $('chainSearch').onkeydown=e=>{if(e.key==='Enter')run();};
   }
   async function openPage(view) {
     if(view==='chips'){
