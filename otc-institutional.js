@@ -164,14 +164,14 @@
       document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b===nav));
       window.__twCurrentView=nav.dataset.view;openPage(nav.dataset.view);return;
     }
-    const row=e.target.closest('#quotesTable td .stock');
-    if(row) {
-      const code=row.parentElement.querySelector('.code')?.textContent.trim();
+    const row=e.target.closest('#quotesTable tbody tr');
+    if(row && !e.target.closest('button')) {
+      const code=row.querySelector('.code')?.textContent.trim();
       if(code){e.preventDefault();e.stopImmediatePropagation();if(!quotes.length)quotes=window.__twQuotes||[];showStock(code);}
     }
   },true);
   const css=document.createElement('style');
-  css.textContent='.rankboard{width:100%;overflow-x:auto}.rankboardhead,.rankboardrow{display:grid;grid-template-columns:58px repeat(3,minmax(180px,1fr));min-width:640px}.rankboardhead{background:var(--surface-2,var(--line));font-weight:700;text-align:center;border-radius:8px 8px 0 0}.rankboardhead>div{padding:12px 8px}.rankboardrow{border-bottom:1px solid var(--line)}.rankboardindex{padding:12px 8px;text-align:center;font-weight:700}.rankboarditem{padding:10px 12px;border-left:1px solid var(--line);min-width:0}.rank-stock{border:0;background:none;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left}.rankamount{font-size:13px;margin-top:5px;font-weight:700}.rankamount span{font-weight:400;color:var(--muted)}.rankempty{color:var(--muted);padding:12px}.chainlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.chainitem{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:12px}.chainitem span{color:var(--muted);flex:1}.chartbox{max-width:650px}.chartbox svg{width:100%;height:auto}.chartlegend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px}.analysis-list{padding-left:20px}.analysis-list li{margin:6px 0}@media(max-width:760px){.chainlist{grid-template-columns:1fr}}';
+  css.textContent='.rankboard{width:100%;overflow-x:auto}.rankboardhead,.rankboardrow{display:grid;grid-template-columns:58px repeat(3,minmax(180px,1fr));min-width:640px}.rankboardhead{background:var(--surface-2,var(--line));font-weight:700;text-align:center;border-radius:8px 8px 0 0}.rankboardhead>div{padding:12px 8px}.rankboardrow{border-bottom:1px solid var(--line)}.rankboardindex{padding:12px 8px;text-align:center;font-weight:700}.rankboarditem{padding:10px 12px;border-left:1px solid var(--line);min-width:0}.rank-stock{border:0;background:none;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left}.rankamount{font-size:13px;margin-top:5px;font-weight:700}.rankamount span{font-weight:400;color:var(--muted)}.rankempty{color:var(--muted);padding:12px}#quotesTable tbody tr{cursor:pointer}#quotesTable tbody tr:hover{background:#f3f6ff} .chainlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.chainitem{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:12px}.chainitem span{color:var(--muted);flex:1}.chartbox{max-width:650px}.chartbox svg{width:100%;height:auto}.chartlegend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px}.analysis-list{padding-left:20px}.analysis-list li{margin:6px 0}@media(max-width:760px){.chainlist{grid-template-columns:1fr}}';
   document.head.appendChild(css);
   window.__twStockDetail=showStock;
   // Prefetch the official daily quote and OTC institutional tables for responsive detail views.
