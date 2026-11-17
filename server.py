@@ -62,7 +62,7 @@ def institutional():
     if not isinstance(rows, list) or not rows:
         raise ValueError("櫃買中心法人資料目前沒有有效資料")
 
-    # Match institutional records to the same-date OTC common-stock quote universe.
+    # Restrict to the OTC common-stock universe; institutional data has its own publication date.
     quote_data = cached("/api/quotes", 300, quotes)
     otc_codes = {
         str(x.get("code", "")).strip()
@@ -122,7 +122,7 @@ def institutional():
         "items": items,
         "source_url": "https://data.gov.tw/dataset/11856",
         "license_url": "https://data.gov.tw/license",
-        "disclaimer": "僅包含上櫃普通股（排除 ETF、ETN、權證等非普通股證券）；資料日期與上櫃每日行情一致；數值單位為股。外資為不含外資自營商。上市個股法人資料暫不提供。"
+        "disclaimer": "僅包含上櫃普通股（排除 ETF、ETN、權證等非普通股證券）；法人資料日期依櫃買中心該資料集標示，與行情日期分開呈現；數值單位為股。外資為不含外資自營商。上市個股法人資料暫不提供。"
     }
 
 class Handler(SimpleHTTPRequestHandler):
