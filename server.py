@@ -52,6 +52,64 @@ def quotes():
     except Exception as e: errors.append("上櫃行情："+str(e))
     return {"updated_at":fetched,"market_dates":dates,"items":list(out.values()),"count":len(out),"errors":errors,"sources":{"上市":"https://data.gov.tw/dataset/11549","上櫃":"https://data.gov.tw/dataset/11371"},"disclaimer":"官方每日收盤行情，非盤中即時報價；各市場均附實際資料日期，未更新時不以舊資料冒充今日行情。"}
 
+
+def institutional():
+    """Official TPEx per-stock institutional flow. Values are shares, not lots."""
+    url = "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
+    r = S.get(url, timeout=30)
+    r.raise_for_status()
+    rows = r.json()
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("櫃買中心法人資料目前沒有有效資料")
+    def integer(v):
+        if v is None: return None
+        z = str(v).replace(",", "").replace(" ", "").strip()
+        if z in ("", "-", "--", "—"): return None
+        try: return int(float(z))
+        except (ValueError, TypeError): return None
+    def date_ad(v):
+        z = str(v or "").strip().replace("/", "").replace("-", "")
+        if len(z) == 7 and z.isdigit():
+            return f"{int(z[:3])+1911:04d}-{z[3:5]}-{z[5:7]}"
+        if len(z) == 8 and z.isdigit():
+            return f"{z[:4]}-{z[4:6]}-{z[6:8]}"
+        return ""
+    # Read official named columns, not positional indexes. A changed/missing field
+    # is treated as unavailable; never turn a missing value into zero.
+    foreign_key = "Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference"
+    trust_key = "SecuritiesInvestmentTrustCompanies-Difference"
+    dealer_key = "Dealers-Difference"
+    total_key = "TotalDifference"
+    items = []
+    for raw in rows:
+        if not isinstance(raw, dict): continue
+        code = str(raw.get("SecuritiesCompanyCode") or "").strip()
+        day = date_ad(raw.get("Date"))
+        foreign, trust, dealer = integer(raw.get(foreign_key)), integer(raw.get(trust_key)), integer(raw.get(dealer_key))
+        if not code or not day or foreign is None or trust is None or dealer is None:
+            continue
+        total = integer(raw.get(total_key))
+        items.append({
+            "code": code, "name": str(raw.get("CompanyName") or "").strip(),
+            "market": "上櫃", "trade_date": day,
+            "foreign_net_shares": foreign, "trust_net_shares": trust,
+            "dealer_net_shares": dealer,
+            "total_net_shares": total if total is not None else foreign + trust + dealer,
+            "unit": "股", "source": "TPEx 官方 OpenAPI／政府資料開放平臺資料集 11856"
+        })
+    if not items:
+        raise ValueError("櫃買中心法人資料欄位格式與預期不符，已停止顯示，避免錯誤數字")
+    dates = sorted({x["trade_date"] for x in items})
+    if len(dates) != 1:
+        raise ValueError("櫃買中心法人資料日期不一致，已停止顯示")
+    return {
+        "market": "上櫃", "trade_date": dates[0], "unit": "股",
+        "count": len(items), "items": items,
+        "source_url": "https://data.gov.tw/dataset/11856",
+        "license_url": "https://data.gov.tw/license",
+        "disclaimer": "僅包含上櫃股票；數值單位為股。外資欄位為不含外資自營商，與官方分類一致；上市個股法人資料暫不提供。"
+    }
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p=urlparse(self.path).path
@@ -60,6 +118,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({"error":"此功能已停用；目前僅提供官方每日收盤行情。","items":[]},410)
         if p == "/api/quotes":
             try:v=cached(p,300,quotes);code=200
+            except Exception as e:v={"error":str(e),"items":[]};code=502
+            return self.send_json(v,code)
+        if p == "/api/institutional":
+            try:v=cached(p,300,institutional);code=200
             except Exception as e:v={"error":str(e),"items":[]};code=502
             return self.send_json(v,code)
         return super().do_GET()
