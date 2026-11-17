@@ -54,60 +54,75 @@ def quotes():
 
 
 def institutional():
-    """Official TPEx per-stock institutional flow. Values are shares, not lots."""
+    """Official TPEx institutional flow, restricted to listed OTC common stocks."""
     url = "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
     r = S.get(url, timeout=30)
     r.raise_for_status()
     rows = r.json()
     if not isinstance(rows, list) or not rows:
         raise ValueError("櫃買中心法人資料目前沒有有效資料")
+
+    # Match institutional records to the same-date OTC common-stock quote universe.
+    quote_data = cached("/api/quotes", 300, quotes)
+    otc_day = (quote_data.get("market_dates") or {}).get("上櫃")
+    if not otc_day:
+        raise ValueError("無法確認上櫃行情日期，暫停法人排行以避免日期錯置")
+    otc_codes = {
+        str(x.get("code", "")).strip()
+        for x in quote_data.get("items", [])
+        if x.get("market") == "上櫃"
+        and str(x.get("code", "")).strip().isdigit()
+        and len(str(x.get("code", "")).strip()) == 4
+    }
+    if not otc_codes:
+        raise ValueError("目前無法取得上櫃普通股清單，暫停法人排行")
+
     def integer(v):
         if v is None: return None
         z = str(v).replace(",", "").replace(" ", "").strip()
         if z in ("", "-", "--", "—"): return None
         try: return int(float(z))
         except (ValueError, TypeError): return None
-    def date_ad(v):
-        z = str(v or "").strip().replace("/", "").replace("-", "")
-        if len(z) == 7 and z.isdigit():
-            return f"{int(z[:3])+1911:04d}-{z[3:5]}-{z[5:7]}"
-        if len(z) == 8 and z.isdigit():
-            return f"{z[:4]}-{z[4:6]}-{z[6:8]}"
-        return ""
-    # Read official named columns, not positional indexes. A changed/missing field
-    # is treated as unavailable; never turn a missing value into zero.
-    foreign_key = "Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference"
-    trust_key = "SecuritiesInvestmentTrustCompanies-Difference"
-    dealer_key = "Dealers-Difference"
-    total_key = "TotalDifference"
+
     items = []
     for raw in rows:
         if not isinstance(raw, dict): continue
         code = str(raw.get("SecuritiesCompanyCode") or "").strip()
-        day = date_ad(raw.get("Date"))
-        foreign, trust, dealer = integer(raw.get(foreign_key)), integer(raw.get(trust_key)), integer(raw.get(dealer_key))
-        if not code or not day or foreign is None or trust is None or dealer is None:
+        day = roc_date(raw.get("Date"))
+        # TPEx endpoint also contains ETFs, ETNs and other securities.
+        # Keep only four-digit common stocks present in the OTC quote dataset.
+        if code not in otc_codes or day != otc_day:
             continue
-        total = integer(raw.get(total_key))
+        foreign = integer(raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference"))
+        trust = integer(raw.get("SecuritiesInvestmentTrustCompanies-Difference"))
+        dealer = integer(raw.get("Dealers-Difference"))
+        if foreign is None or trust is None or dealer is None:
+            continue
+        total = integer(raw.get("TotalDifference"))
         items.append({
-            "code": code, "name": str(raw.get("CompanyName") or "").strip(),
-            "market": "上櫃", "trade_date": day,
-            "foreign_net_shares": foreign, "trust_net_shares": trust,
+            "code": code,
+            "name": str(raw.get("CompanyName") or "").strip(),
+            "market": "上櫃",
+            "trade_date": day,
+            "foreign_net_shares": foreign,
+            "trust_net_shares": trust,
             "dealer_net_shares": dealer,
             "total_net_shares": total if total is not None else foreign + trust + dealer,
-            "unit": "股", "source": "TPEx 官方 OpenAPI／政府資料開放平臺資料集 11856"
+            "unit": "股",
+            "source": "TPEx 官方 OpenAPI／政府資料開放平臺資料集 11856"
         })
+
     if not items:
-        raise ValueError("櫃買中心法人資料欄位格式與預期不符，已停止顯示，避免錯誤數字")
-    dates = sorted({x["trade_date"] for x in items})
-    if len(dates) != 1:
-        raise ValueError("櫃買中心法人資料日期不一致，已停止顯示")
+        raise ValueError("當日上櫃普通股法人資料為空，或官方欄位格式已變更；不顯示舊資料或推測數字")
     return {
-        "market": "上櫃", "trade_date": dates[0], "unit": "股",
-        "count": len(items), "items": items,
+        "market": "上櫃",
+        "trade_date": otc_day,
+        "unit": "股",
+        "count": len(items),
+        "items": items,
         "source_url": "https://data.gov.tw/dataset/11856",
         "license_url": "https://data.gov.tw/license",
-        "disclaimer": "僅包含上櫃股票；數值單位為股。外資欄位為不含外資自營商，與官方分類一致；上市個股法人資料暫不提供。"
+        "disclaimer": "僅包含上櫃普通股（排除 ETF、ETN、權證等非普通股證券）；資料日期與上櫃每日行情一致；數值單位為股。外資為不含外資自營商。上市個股法人資料暫不提供。"
     }
 
 class Handler(SimpleHTTPRequestHandler):
