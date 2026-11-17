@@ -119,7 +119,7 @@
     if(nav&&(nav.dataset.view==='chips'||nav.dataset.view==='supply')) {
       e.preventDefault();e.stopImmediatePropagation();
       document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b===nav));
-      openPage(nav.dataset.view);return;
+      window.__twCurrentView=nav.dataset.view;openPage(nav.dataset.view);return;
     }
     const row=e.target.closest('#quotesTable td .stock');
     if(row) {
