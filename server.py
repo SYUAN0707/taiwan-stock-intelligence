@@ -202,7 +202,14 @@ class Handler(SimpleHTTPRequestHandler):
         if p == "/api/history":
             try:
                 code = parse_qs(urlparse(self.path).query).get("code", [""])[0]
-                v = cached("history:"+code, 1800, lambda: stock_history(code)); status = 200
+                qdata = cached("/api/quotes", 300, quotes)
+                stock = next((x for x in qdata.get("items", []) if x.get("code") == code), None)
+                if not stock or not stock.get("trade_date"):
+                    raise ValueError("無法確認市場總覽最新行情日期，暫停顯示歷史 K 線")
+                # Include the quote date in the cache key so a new official
+                # market date cannot be masked by yesterday's cached chart.
+                cache_key = "history:"+code+":"+stock["trade_date"]
+                v = cached(cache_key, 300, lambda: stock_history(code)); status = 200
             except Exception as e:
                 v = {"error":str(e),"items":[]}; status = 502
             return self.send_json(v, status)
