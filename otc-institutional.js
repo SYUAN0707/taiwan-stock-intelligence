@@ -67,7 +67,7 @@
       const r=await fetch(API+'/api/history?code='+encodeURIComponent(code),{cache:'no-store'});
       const d=await r.json();
       if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw Error(d.error||'歷史行情暫時無法取得');
-      chartBox.innerHTML=chart(d.items);
+      chartBox.innerHTML='<p class="sub">線圖資料截至：'+esc(d.trade_date||'日期未提供')+'；市場總覽確認日期：'+esc(d.market_quote_date||'日期未提供')+'</p>'+chart(d.items);
       techBox.innerHTML=technical(d.items)+'<p class="sub">來源：'+esc(d.source)+'。'+esc(d.disclaimer||'')+'</p>';
     }catch(e){
       chartBox.innerHTML='<p class="sub">歷史 K 線讀取失敗：'+esc(e.message)+'。不以假資料替代。</p>';
