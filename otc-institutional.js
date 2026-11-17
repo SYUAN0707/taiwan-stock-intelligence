@@ -26,7 +26,7 @@
   async function loadInst() {
     const r = await fetch(API + '/api/institutional', {cache:'no-store'});
     const d = await r.json();
-    if (!r.ok || !Array.isArray(d.items) || !d.items.length) throw Error(d.error || '上市＋上市＋上櫃法人資料暫時無法取得');
+    if (!r.ok || !Array.isArray(d.items) || !d.items.length) throw Error(d.error || '上市＋上櫃法人資料暫時無法取得');
     inst = d.items; instInfo = d;
   }
   const quote = code => quotes.find(x=>x.code===code);
