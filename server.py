@@ -53,6 +53,65 @@ def quotes():
     return {"updated_at":fetched,"market_dates":dates,"items":list(out.values()),"count":len(out),"errors":errors,"sources":{"上市":"https://data.gov.tw/dataset/11549","上櫃":"https://data.gov.tw/dataset/11371"},"disclaimer":"官方每日收盤行情，非盤中即時報價；各市場均附實際資料日期，未更新時不以舊資料冒充今日行情。"}
 
 
+
+def history_month(code, market, year, month):
+    """Fetch one official monthly OHLCV table for a single listed/OTC stock."""
+    if market == "上市":
+        url = "https://www.twse.com.tw/exchangeReport/STOCK_DAY"
+        params = {"response":"json","date":f"{year}{month:02d}01","stockNo":code}
+        r = S.get(url, params=params, timeout=25); r.raise_for_status()
+        payload = r.json()
+        raw_rows = payload.get("data", []) if payload.get("stat") == "OK" else []
+        rows = []
+        for x in raw_rows:
+            if len(x) < 7: continue
+            day = roc_date(x[0])
+            vals = [num(v) for v in x[3:7]]
+            if day and all(v is not None for v in vals):
+                rows.append({"date":day,"volume":num(x[1]),"open":vals[0],"high":vals[1],"low":vals[2],"close":vals[3]})
+        return rows
+    if market == "上櫃":
+        url = "https://www.tpex.org.tw/www/zh-tw/afterTrading/tradingStock"
+        params = {"code":code,"date":f"{year}/{month:02d}/01","id":"","response":"json"}
+        r = S.get(url, params=params, timeout=25); r.raise_for_status()
+        payload = r.json()
+        tables = payload.get("tables", [])
+        raw_rows = tables[0].get("data", []) if tables else []
+        rows = []
+        for x in raw_rows:
+            if len(x) < 7: continue
+            day = roc_date(str(x[0]).replace("*","").replace("＊",""))
+            vals = [num(v) for v in x[3:7]]
+            if day and all(v is not None for v in vals):
+                # TPEx monthly table reports trading volume in lots (張).
+                rows.append({"date":day,"volume":(num(x[1]) or 0)*1000,"open":vals[0],"high":vals[1],"low":vals[2],"close":vals[3]})
+        return rows
+    raise ValueError("不支援的市場別")
+
+def stock_history(code):
+    code = str(code or "").strip()
+    if not code or len(code) > 10 or not code.isalnum():
+        raise ValueError("股票代號格式不正確")
+    qdata = cached("/api/quotes", 300, quotes)
+    stock = next((x for x in qdata.get("items",[]) if x.get("code")==code), None)
+    if not stock:
+        raise ValueError("目前官方行情清單找不到此股票，暫不查詢歷史資料")
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
+    months = []
+    y, m = now.year, now.month
+    for _ in range(3):
+        months.append((y,m))
+        m -= 1
+        if m == 0: y,m = y-1,12
+    rows = []
+    for yy,mm in reversed(months):
+        rows.extend(history_month(code, stock["market"], yy, mm))
+    unique = {x["date"]:x for x in rows}
+    result = sorted(unique.values(), key=lambda x:x["date"])[-40:]
+    if len(result) < 20:
+        raise ValueError(f"官方歷史資料目前僅取得 {len(result)} 個交易日，至少需要 20 日才能計算月線")
+    return {"code":code,"name":stock.get("name",""),"market":stock["market"],"trade_date":result[-1]["date"],"count":len(result),"items":result,"source":"TWSE 個股日成交資訊 STOCK_DAY" if stock["market"]=="上市" else "TPEx 個股月成交資訊 tradingStock","disclaimer":"近 40 個交易日官方 OHLCV 歷史資料；上櫃成交量依官方月表張數換算為股數。均線依未還原收盤價計算，遇除權息或減資可能產生跳空。"}
+
 def institutional():
     """Official TPEx institutional flow, restricted to listed OTC common stocks."""
     url = "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
@@ -135,6 +194,13 @@ class Handler(SimpleHTTPRequestHandler):
             try:v=cached(p,300,quotes);code=200
             except Exception as e:v={"error":str(e),"items":[]};code=502
             return self.send_json(v,code)
+        if p == "/api/history":
+            try:
+                code = parse_qs(urlparse(self.path).query).get("code", [""])[0]
+                v = cached("history:"+code, 1800, lambda: stock_history(code)); status = 200
+            except Exception as e:
+                v = {"error":str(e),"items":[]}; status = 502
+            return self.send_json(v, status)
         if p == "/api/institutional":
             try:v=cached(p,300,institutional);code=200
             except Exception as e:v={"error":str(e),"items":[]};code=502
