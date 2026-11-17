@@ -72,25 +72,37 @@
     $('backToQuotes').onclick=()=>{document.querySelector('nav button[data-view="market"]')?.click();};
     document.querySelectorAll('.open-stock').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
   }
-  function rankTable(rows,key,label) {
-    return rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><button class="rank-stock" data-code="'+esc(x.code)+'" data-key="'+key+'" data-label="'+esc(label)+'">'+esc(x.name||x.code)+'（'+esc(x.code)+'）</button></td><td class="'+(x[key]>0?'up':x[key]<0?'down':'')+'">'+n(x[key])+' 股</td><td>'+n(x[key]/1000)+' 張</td></tr>').join('')||'<tr><td colspan="4" class="empty">目前沒有資料</td></tr>';
+  function rankColumn(items,key,label,side) {
+    return items.map((x,i)=>'<div class="rankcell"><div class="ranknum">'+(i+1)+'.</div><div class="rankstockinfo"><button class="rank-stock" data-code="'+esc(x.code)+'" data-key="'+key+'" data-label="'+esc(label)+'" data-side="'+side+'">'+esc(x.name||x.code)+'（'+esc(x.code)+'）</button><div class="rankamount '+(x[key]>0?'up':x[key]<0?'down':'')+'">'+n(Math.abs(x[key]))+' 股／'+n(Math.abs(x[key])/1000)+' 張</div></div></div>').join('') || '<div class="rankempty">目前沒有資料</div>';
   }
   function showRanks() {
     $('pageTitle').textContent='法人買賣超排行';
-    $('pageSub').textContent='同一頁比較外資、投信、自營商；僅提供上櫃官方開放資料';
+    $('pageSub').textContent='買超與賣超分開呈現；外資、投信、自營商並排比較';
     if(!inst.length){$('content').innerHTML='<section class="panel"><h2>法人資料暫時無法取得</h2><p>請稍後重新載入，不以舊資料或推測數字補值。</p></section>';return;}
     const groups=[['foreign_net_shares','外資（不含外資自營商）'],['trust_net_shares','投信'],['dealer_net_shares','自營商']];
-    let html='<div class="notice">資料日期：'+esc(instInfo.trade_date)+'｜僅上櫃股票｜單位同時顯示股與張（1 張 = 1,000 股）。上市個股法人資料暫不整合。</div>';
-    for(const [key,label] of groups){
-      const buy=[...inst].filter(x=>x[key]>0).sort((a,b)=>b[key]-a[key]).slice(0,10);
-      const sell=[...inst].filter(x=>x[key]<0).sort((a,b)=>a[key]-b[key]).slice(0,10);
-      html+='<section class="panel"><h2>'+label+'</h2><div class="rankgrid"><div><h3>買超前 10 名</h3><div class="tablewrap"><table><thead><tr><th>排名</th><th>股票</th><th>買賣超</th><th>換算張數</th></tr></thead><tbody>'+rankTable(buy,key,label)+'</tbody></table></div></div><div><h3>賣超前 10 名</h3><div class="tablewrap"><table><thead><tr><th>排名</th><th>股票</th><th>買賣超</th><th>換算張數</th></tr></thead><tbody>'+rankTable(sell,key,label)+'</tbody></table></div></div></div></section>';
+    let html='<div class="notice">資料日期：'+esc(instInfo.trade_date)+'｜僅上櫃股票｜每欄各自排名前 10 名｜金額為淨買賣超，單位同時顯示股與張。</div>';
+    for(const side of ['buy','sell']){
+      const title=side==='buy'?'買超':'賣超';
+      html+='<section class="panel"><div class="panelhead"><h2>'+title+'</h2><span class="tag">'+(side==='buy'?'由買超多至少排序':'由賣超多至少排序')+'</span></div><div class="rankboard"><div class="rankboardhead"><div>排名</div>'+groups.map(g=>'<div>'+g[1]+'</div>').join('')+'</div>';
+      const columns=groups.map(([key,label])=>{
+        const arr=[...inst].filter(x=>side==='buy'?x[key]>0:x[key]<0).sort((a,b)=>side==='buy'?b[key]-a[key]:a[key]-b[key]).slice(0,10);
+        return {key,label,arr};
+      });
+      for(let i=0;i<10;i++){
+        html+='<div class="rankboardrow"><div class="rankboardindex">'+(i+1)+'.</div>'+columns.map(c=>{
+          const x=c.arr[i];
+          return x?'<div class="rankboarditem"><button class="rank-stock" data-code="'+esc(x.code)+'" data-key="'+c.key+'" data-label="'+esc(c.label)+'" data-side="'+side+'">'+esc(x.name||x.code)+'（'+esc(x.code)+'）</button><div class="rankamount '+(x[c.key]>0?'up':'down')+'">'+n(Math.abs(x[c.key]))+' 股 <span>('+n(Math.abs(x[c.key])/1000)+' 張)</span></div></div>':'<div class="rankboarditem rankempty">—</div>';
+        }).join('')+'</div>';
+      }
+      html+='</div></section>';
     }
     html+='<div class="footer">來源：<a href="https://data.gov.tw/dataset/11856" target="_blank" rel="noopener">政府資料開放平臺 11856</a>／<a href="https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading" target="_blank" rel="noopener">櫃買中心 OpenAPI</a>。</div><section class="panel" id="rankDetail" hidden></section>';
     $('content').innerHTML=html;
     document.querySelectorAll('.rank-stock').forEach(b=>b.onclick=()=>{
       const x=inst.find(z=>z.code===b.dataset.code),key=b.dataset.key,val=x[key],box=$('rankDetail');
-      box.hidden=false;box.innerHTML='<h2>'+esc(b.dataset.label)+'｜'+esc(x.name||x.code)+'（'+esc(x.code)+'）</h2><div class="detail"><div><small>資料日期</small><b>'+esc(x.trade_date)+'</b></div><div><small>買賣超股數</small><b class="'+cls(val)+'">'+n(Math.abs(val))+' 股</b></div><div><small>換算張數</small><b>'+n(Math.abs(val)/1000)+' 張</b></div><div><small>方向</small><b class="'+cls(val)+'">'+(val>0?'買超':val<0?'賣超':'中性')+'</b></div></div><p class="sub">這裡顯示所選法人類別的淨買賣超數量；不是買進總量或賣出總量。</p>';
+      box.hidden=false;
+      box.innerHTML='<h2>'+esc(b.dataset.label)+'｜'+esc(x.name||x.code)+'（'+esc(x.code)+'）</h2><div class="detail"><div><small>排行類別</small><b>'+ (b.dataset.side==='buy'?'買超':'賣超')+'</b></div><div><small>資料日期</small><b>'+esc(x.trade_date)+'</b></div><div><small>淨買賣超</small><b class="'+cls(val)+'">'+(val>0?'買超 ':'賣超 ')+n(Math.abs(val))+' 股</b></div><div><small>換算張數</small><b>'+n(Math.abs(val)/1000)+' 張</b></div></div><p class="sub">此數字為該法人類別的淨買賣超，不代表買進總量或賣出總量。</p><button class="secondary" id="rankOpenStock">查看個股詳細頁</button>';
+      $('rankOpenStock').onclick=()=>showStock(x.code);
       box.scrollIntoView({behavior:'smooth',block:'center'});
     });
   }
@@ -128,7 +140,7 @@
     }
   },true);
   const css=document.createElement('style');
-  css.textContent='.rankgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.rankgrid h3{font-size:14px}.rank-stock{border:0;background:none;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0}.chainlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.chainitem{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:12px}.chainitem span{color:var(--muted);flex:1}.chartbox{max-width:650px}.chartbox svg{width:100%;height:auto}.chartlegend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px}.analysis-list{padding-left:20px}.analysis-list li{margin:6px 0}@media(max-width:760px){.rankgrid,.chainlist{grid-template-columns:1fr}}';
+  css.textContent='.rankboard{width:100%;overflow-x:auto}.rankboardhead,.rankboardrow{display:grid;grid-template-columns:58px repeat(3,minmax(180px,1fr));min-width:640px}.rankboardhead{background:var(--surface-2,var(--line));font-weight:700;text-align:center;border-radius:8px 8px 0 0}.rankboardhead>div{padding:12px 8px}.rankboardrow{border-bottom:1px solid var(--line)}.rankboardindex{padding:12px 8px;text-align:center;font-weight:700}.rankboarditem{padding:10px 12px;border-left:1px solid var(--line);min-width:0}.rank-stock{border:0;background:none;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left}.rankamount{font-size:13px;margin-top:5px;font-weight:700}.rankamount span{font-weight:400;color:var(--muted)}.rankempty{color:var(--muted);padding:12px}.chainlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.chainitem{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:12px}.chainitem span{color:var(--muted);flex:1}.chartbox{max-width:650px}.chartbox svg{width:100%;height:auto}.chartlegend{display:flex;gap:15px;flex-wrap:wrap;color:var(--muted);font-size:12px}.analysis-list{padding-left:20px}.analysis-list li{margin:6px 0}@media(max-width:760px){.chainlist{grid-template-columns:1fr}}';
   document.head.appendChild(css);
   window.__twStockDetail=showStock;
   // Prefetch the official daily quote and OTC institutional tables for responsive detail views.
