@@ -64,9 +64,6 @@ def institutional():
 
     # Match institutional records to the same-date OTC common-stock quote universe.
     quote_data = cached("/api/quotes", 300, quotes)
-    otc_day = (quote_data.get("market_dates") or {}).get("上櫃")
-    if not otc_day:
-        raise ValueError("無法確認上櫃行情日期，暫停法人排行以避免日期錯置")
     otc_codes = {
         str(x.get("code", "")).strip()
         for x in quote_data.get("items", [])
@@ -91,7 +88,7 @@ def institutional():
         day = roc_date(raw.get("Date"))
         # TPEx endpoint also contains ETFs, ETNs and other securities.
         # Keep only four-digit common stocks present in the OTC quote dataset.
-        if code not in otc_codes or day != otc_day:
+        if code not in otc_codes or not day:
             continue
         foreign = integer(raw.get("Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Difference"))
         trust = integer(raw.get("SecuritiesInvestmentTrustCompanies-Difference"))
@@ -113,10 +110,13 @@ def institutional():
         })
 
     if not items:
-        raise ValueError("當日上櫃普通股法人資料為空，或官方欄位格式已變更；不顯示舊資料或推測數字")
+        raise ValueError("上櫃普通股法人資料為空，或官方欄位格式已變更；不顯示舊資料或推測數字")
+    dates = sorted({x["trade_date"] for x in items})
+    if len(dates) != 1:
+        raise ValueError("櫃買中心法人資料包含多個交易日期，已停止顯示")
     return {
         "market": "上櫃",
-        "trade_date": otc_day,
+        "trade_date": dates[0],
         "unit": "股",
         "count": len(items),
         "items": items,
