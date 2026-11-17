@@ -30,27 +30,49 @@
     inst = d.items; instInfo = d;
   }
   const quote = code => quotes.find(x=>x.code===code);
-  function chart(q) {
-    const close=q.close??q.price; const vals=[q.low,q.open,close,q.high].map(Number);
-    if(vals.some(x=>!Number.isFinite(x))) return '<p class="sub">官方當日 OHLC 資料不足，暫不繪製K線。</p>';
-    const min=Math.min(...vals), max=Math.max(...vals), span=Math.max(max-min,Math.abs(max)*.01,0.01);
-    const y=v=>20+(max-v)/span*180;
-    const up=close>=q.open, color=up?'#d84a4a':'#15966a';
-    return '<div class="chartbox"><svg viewBox="0 0 460 230" role="img" aria-label="單日 OHLC K 線圖"><line x1="48" y1="20" x2="440" y2="20" stroke="#e7eaf0"/><line x1="48" y1="110" x2="440" y2="110" stroke="#e7eaf0"/><line x1="48" y1="200" x2="440" y2="200" stroke="#e7eaf0"/><text x="5" y="'+(y(max)+4)+'" font-size="11" fill="#758092">'+n(max)+'</text><text x="5" y="'+(y(min)+4)+'" font-size="11" fill="#758092">'+n(min)+'</text><line x1="245" y1="'+y(q.high)+'" x2="245" y2="'+y(q.low)+'" stroke="'+color+'" stroke-width="3"/><rect x="220" y="'+Math.min(y(q.open),y(close))+'" width="50" height="'+Math.max(3,Math.abs(y(q.open)-y(q.close)))+'" fill="'+(up?'#fff':'#15966a')+'" stroke="'+color+'" stroke-width="3"/><text x="220" y="222" font-size="12" fill="#758092">當日</text></svg><div class="chartlegend"><span>開盤 '+n(q.open)+'</span><span>最高 '+n(q.high)+'</span><span>最低 '+n(q.low)+'</span><span>收盤 '+n(q.price)+'</span></div></div>';
+  function chart(rows) {
+    if(!Array.isArray(rows)||rows.length<20) return '<p class="sub">官方歷史資料不足 20 個交易日，暫不繪製 K 線或計算月線。</p>';
+    const data=rows.slice(-40), closes=data.map(x=>Number(x.close));
+    const ma=(period)=>data.map((x,i)=>i+1<period?null:closes.slice(i+1-period,i+1).reduce((a,v)=>a+v,0)/period);
+    const ma5=ma(5), ma20=ma(20);
+    const lows=data.map(x=>Number(x.low)), highs=data.map(x=>Number(x.high));
+    const min=Math.min(...lows),max=Math.max(...highs),pad=(max-min)*.08||Math.abs(max)*.02||1;
+    const lo=min-pad,hi=max+pad, W=900,H=330,L=64,R=18,T=18,B=48;
+    const plotW=W-L-R,plotH=H-T-B, step=plotW/data.length, body=Math.max(3,Math.min(12,step*.58));
+    const y=v=>T+(hi-v)/(hi-lo)*plotH;
+    const grid=[0,1,2,3,4].map(i=>{const v=hi-(hi-lo)*i/4, yy=y(v);return '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" stroke="#e7eaf0"/><text x="5" y="'+(yy+4)+'" font-size="11" fill="#758092">'+n(v)+'</text>';}).join('');
+    const candles=data.map((x,i)=>{const o=Number(x.open),c=Number(x.close),h=Number(x.high),l=Number(x.low),cx=L+step*(i+.5),up=c>=o,color=up?'#d84a4a':'#15966a';return '<line x1="'+cx+'" y1="'+y(h)+'" x2="'+cx+'" y2="'+y(l)+'" stroke="'+color+'" stroke-width="1.5"/><rect x="'+(cx-body/2)+'" y="'+Math.min(y(o),y(c))+'" width="'+body+'" height="'+Math.max(1.5,Math.abs(y(o)-y(c)))+'" fill="'+(up?'#fff':color)+'" stroke="'+color+'" stroke-width="1.5"/>';}).join('');
+    const line=(vals,color)=>vals.map((v,i)=>v==null?null:(L+step*(i+.5))+','+y(v)).filter(Boolean).join(' ');
+    const labels=[0,Math.floor((data.length-1)/3),Math.floor(2*(data.length-1)/3),data.length-1].map(i=>'<text x="'+(L+step*(i+.5))+'" y="'+(H-15)+'" text-anchor="middle" font-size="11" fill="#758092">'+esc(data[i].date.slice(5))+'</text>').join('');
+    return '<div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="近40個交易日K線與MA5、MA20">'+grid+candles+'<polyline points="'+line(ma5,'')+'" fill="none" stroke="#e0a12b" stroke-width="2.2" stroke-linejoin="round"/><polyline points="'+line(ma20,'')+'" fill="none" stroke="#315bd6" stroke-width="2.2" stroke-linejoin="round"/>'+labels+'</svg><div class="chartlegend"><span style="color:#d84a4a">紅K：收漲</span><span style="color:#15966a">綠K：收跌</span><span style="color:#e0a12b">MA5：5日均線</span><span style="color:#315bd6">MA20：月線</span></div><p class="sub">資料日期：'+esc(data[data.length-1].date)+'｜共 '+data.length+' 個交易日。均線依未還原收盤價計算。</p></div>';
   }
-  function technical(q) {
-    const diff=Number(q.close??q.price)-Number(q.open);
-    const change=Number(q.change);
-    const range=Number(q.high)-Number(q.low);
-    let parts=[];
-    parts.push(diff>0?'收盤高於開盤，當日K棒為紅K（上漲）。':diff<0?'收盤低於開盤，當日K棒為綠K（下跌）。':'開盤與收盤相同，當日為十字／平盤型態。');
-    if(Number.isFinite(range)&&range>0) {
-      const body=Math.abs(diff)/range;
-      parts.push(body>=.65?'實體占當日振幅比重較高，當日方向性較明顯。':body<=.25?'實體相對較短，當日多空拉鋸較明顯。':'實體長度居中，需搭配後續交易日確認。');
+  function technical(rows) {
+    if(!Array.isArray(rows)||rows.length<20) return '<p class="sub">歷史資料不足，無法可靠計算短、中期均線；請稍後重試。</p>';
+    const d=rows.slice(-40), c=d.map(x=>Number(x.close));
+    const avg=n=>c.slice(-n).reduce((a,v)=>a+v,0)/Math.min(n,c.length);
+    const ma5=avg(5),ma20=avg(20),last=c[c.length-1],prev=c[c.length-2],fiveAgo=c[Math.max(0,c.length-6)],twentyAgo=c[0];
+    const pct=(x,y)=>y?((x/y-1)*100):0;
+    const short=last>ma5?'收盤價位於 MA5 之上，短線偏強；留意是否能連續守住 5 日均線。':last<ma5?'收盤價位於 MA5 之下，短線偏弱；觀察能否重新站回 5 日均線。':'收盤價貼近 MA5，短線方向尚待確認。';
+    const mid=ma5>ma20?'MA5 高於 MA20，短中期均線呈偏多排列；若 MA5 轉平或跌破月線，需留意動能降溫。':ma5<ma20?'MA5 低於 MA20，短中期均線偏空；需觀察是否站回月線並形成翻揚。':'MA5 與 MA20 接近，中期趨勢尚未明朗，宜等待均線方向確認。';
+    const long= pct(last,twentyAgo)>3?'近 40 個交易日收盤價較區間起點上升，這段期間偏向上行；但 40 日不足以判斷長期投資趨勢。':pct(last,twentyAgo)<-3?'近 40 個交易日收盤價較區間起點下跌，這段期間偏向走弱；但不能據此推定長期基本面惡化。':'近 40 個交易日大致處於區間整理；長期展望仍須搭配營收、獲利、產業景氣與公司展望評估。';
+    const momentum=pct(last,fiveAgo),daily=pct(last,prev);
+    return '<div class="analysis-list"><h3>短期（約 1–5 個交易日）</h3><p>'+esc(short)+'</p><p>近 5 個交易日價格變化約 '+(momentum>=0?'+':'')+n(momentum)+'%；最新一日約 '+(daily>=0?'+':'')+n(daily)+'%。</p><h3>中期（約 1 個月）</h3><p>'+esc(mid)+'</p><p>MA5：'+n(ma5)+' 元；MA20（月線）：'+n(ma20)+' 元。均線是趨勢觀察工具，不保證未來走勢。</p><h3>較長期觀察（本圖僅涵蓋近 40 日）</h3><p>'+esc(long)+'</p><p>本段歷史 K 線不能單獨代表半年或一年展望；需再檢視月營收、毛利率、EPS、現金流、產業需求與重大風險。</p></div>';
+  }
+  async function loadHistory(code) {
+    const chartBox=$('historyChart'), techBox=$('historyTechnical');
+    if(!chartBox||!techBox)return;
+    chartBox.innerHTML='<p class="sub">正在讀取官方近 40 個交易日歷史資料…</p>';
+    techBox.innerHTML='<p class="sub">等待歷史行情資料計算。</p>';
+    try{
+      const r=await fetch(API+'/api/history?code='+encodeURIComponent(code),{cache:'no-store'});
+      const d=await r.json();
+      if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw Error(d.error||'歷史行情暫時無法取得');
+      chartBox.innerHTML=chart(d.items);
+      techBox.innerHTML=technical(d.items)+'<p class="sub">來源：'+esc(d.source)+'。'+esc(d.disclaimer||'')+'</p>';
+    }catch(e){
+      chartBox.innerHTML='<p class="sub">歷史 K 線讀取失敗：'+esc(e.message)+'。不以假資料替代。</p>';
+      techBox.innerHTML='<p class="sub">目前無法取得足夠的官方歷史行情，因此暫不提供技術趨勢判讀。</p>';
     }
-    if(Number.isFinite(change)) parts.push('當日漲跌價差 '+(change>0?'+':'')+n(change)+' 元。');
-    parts.push('目前僅以單日 OHLC 判讀；尚未取得連續歷史日K，因此不計算均線、MACD、RSI，也不推論中長期趨勢。');
-    return '<ul class="analysis-list">'+parts.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
   }
   function news(q) {
     const query=encodeURIComponent((q.name||q.code)+' '+q.code+' 台股');
@@ -68,7 +90,8 @@
     const chain=isTsmc?tsmcChain:[];
     $('pageTitle').textContent=(q.name||'個股')+'（'+q.code+'）';
     $('pageSub').textContent='每日收盤行情｜'+esc(q.market)+'｜資料日期 '+esc(q.trade_date||'—');
-    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>每日收盤行情</h2><span class="tag">'+esc(q.market)+'</span></div><div class="detail"><div><small>收盤價</small><b>'+n(q.price)+'</b></div><div><small>漲跌價差</small><b class="'+cls(q.change)+'">'+n(q.change)+'</b></div><div><small>成交量（股）</small><b>'+n(q.volume)+'</b></div><div><small>成交金額（元）</small><b>'+n(q.amount)+'</b></div><div><small>開盤</small><b>'+n(q.open)+'</b></div><div><small>最高／最低</small><b>'+n(q.high)+'／'+n(q.low)+'</b></div><div><small>交易日期</small><b>'+esc(q.trade_date||'—')+'</b></div><div><small>行情來源</small><b>'+esc(q.quote_source||'交易所每日資料')+'</b></div></div></section><section class="panel"><h2>當日技術線圖（OHLC）</h2>'+chart(q)+'</section><section class="panel"><h2>技術面解讀</h2>'+technical(q)+'</section><section class="panel"><h2>上櫃法人資料</h2>'+(i?'<div class="detail"><div><small>外資（不含外資自營商）</small><b>'+n(i.foreign_net_shares)+' 股</b></div><div><small>投信</small><b>'+n(i.trust_net_shares)+' 股</b></div><div><small>自營商</small><b>'+n(i.dealer_net_shares)+' 股</b></div><div><small>三大法人合計</small><b>'+n(i.total_net_shares)+' 股</b></div></div><p class="sub">資料日期 '+esc(i.trade_date)+'；單位為股。上市個股法人資料依目前設定不提供。</p>':(q.market==='上市'?'此股票為上市股票，依目前設定不提供上市個股法人資料。':'此股票尚無可用的上櫃法人資料。'))+'</section><section class="panel"><h2>相關新聞</h2>'+news(q)+'</section><section class="panel"><h2>同產業／產業關聯權值股</h2>'+(peers.length?'<div class="chainlist">'+peerCards(peers)+'</div>':'<p class="sub">目前尚無已整理並完成來源查證的同產業權值股名單。</p>')+'</section><section class="panel"><h2>下游／供應鏈廠商</h2>'+(chain.length?'<div class="chainlist">'+peerCards(chain)+'</div><p class="sub">此為依你提供的台積電關聯廠商清單建立的初始分類；各公司實際供應、客戶關係及產品項目仍須逐一依年報、法說會或公開資訊查證，不代表已證實的直接供應關係。</p>':'<p class="sub">此股票尚未建立經查證的供應鏈關係，避免把同產業公司直接標示為上下游廠商。</p>')+'</section><button class="secondary" id="backToQuotes">返回每日收盤行情</button>';
+    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>每日收盤行情</h2><span class="tag">'+esc(q.market)+'</span></div><div class="detail"><div><small>收盤價</small><b>'+n(q.price)+'</b></div><div><small>漲跌價差</small><b class="'+cls(q.change)+'">'+n(q.change)+'</b></div><div><small>成交量（股）</small><b>'+n(q.volume)+'</b></div><div><small>成交金額（元）</small><b>'+n(q.amount)+'</b></div><div><small>開盤</small><b>'+n(q.open)+'</b></div><div><small>最高／最低</small><b>'+n(q.high)+'／'+n(q.low)+'</b></div><div><small>交易日期</small><b>'+esc(q.trade_date||'—')+'</b></div><div><small>行情來源</small><b>'+esc(q.quote_source||'交易所每日資料')+'</b></div></div></section><section class="panel"><h2>近 40 個交易日 K 線</h2><div id="historyChart"></div>+'</section><section class="panel"><h2>技術面解讀（短、中、長期觀察）</h2><div id="historyTechnical"></div>+'</section><section class="panel"><h2>上櫃法人資料</h2>'+(i?'<div class="detail"><div><small>外資（不含外資自營商）</small><b>'+n(i.foreign_net_shares)+' 股</b></div><div><small>投信</small><b>'+n(i.trust_net_shares)+' 股</b></div><div><small>自營商</small><b>'+n(i.dealer_net_shares)+' 股</b></div><div><small>三大法人合計</small><b>'+n(i.total_net_shares)+' 股</b></div></div><p class="sub">資料日期 '+esc(i.trade_date)+'；單位為股。上市個股法人資料依目前設定不提供。</p>':(q.market==='上市'?'此股票為上市股票，依目前設定不提供上市個股法人資料。':'此股票尚無可用的上櫃法人資料。'))+'</section><section class="panel"><h2>相關新聞</h2>'+news(q)+'</section><section class="panel"><h2>同產業／產業關聯權值股</h2>'+(peers.length?'<div class="chainlist">'+peerCards(peers)+'</div>':'<p class="sub">目前尚無已整理並完成來源查證的同產業權值股名單。</p>')+'</section><section class="panel"><h2>下游／供應鏈廠商</h2>'+(chain.length?'<div class="chainlist">'+peerCards(chain)+'</div><p class="sub">此為依你提供的台積電關聯廠商清單建立的初始分類；各公司實際供應、客戶關係及產品項目仍須逐一依年報、法說會或公開資訊查證，不代表已證實的直接供應關係。</p>':'<p class="sub">此股票尚未建立經查證的供應鏈關係，避免把同產業公司直接標示為上下游廠商。</p>')+'</section><button class="secondary" id="backToQuotes">返回每日收盤行情</button>';
+    loadHistory(code);
     $('backToQuotes').onclick=()=>{document.querySelector('nav button[data-view="market"]')?.click();};
     document.querySelectorAll('.open-stock').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
   }
