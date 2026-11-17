@@ -1,6 +1,7 @@
 (() => {
   const API = 'https://taiwan-stock-intelligence-api.onrender.com';
   let data = [], info = null;
+  fetch(API + '/api/quotes', {cache:'no-store'}).then(r=>r.json()).then(q=>{window.__twQuotes=q.items||[];}).catch(()=>{});
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = v => v == null ? '—' : Number(v).toLocaleString('zh-TW');
