@@ -8,7 +8,7 @@
 <div class="notice" id="notice">資料載入中。此網站不會以隨機數字填補缺漏資料。</div><section id="content"><div class="loading">正在讀取官方市場資料…</div></section>
 <div class="footer">資料來源：臺灣證券交易所（TWSE）、證券櫃檯買賣中心（TPEx）每日行情；不使用即時行情或未確認授權的法人資料；各筆行情均標示官方資料日期。法人排行僅提供上櫃官方開放資料；上市個股法人資料暫不整合。資料可能因官方端點更新、維護或欄位異動而延遲或暫時無法取得。本網站資訊僅供研究參考，不構成投資建議。</div></main>
 <script>
-const API_BASE='https://taiwan-stock-test-api.onrender.com';
+const API_BASE='https://taiwan-stock-intelligence-api.onrender.com';
 const state={quotes:[],view:'market',query:'',market:'全部市場',sort:'volume',watch:JSON.parse(localStorage.getItem('tw-watch')||'[]'),selected:null};
 const $=id=>document.getElementById(id),fmt=(v,d=2)=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:d}),dateLabel=v=>{if(!v)return '未取得';const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?Number(m[2])+'月'+Number(m[3])+'日':String(v)},cls=v=>v>0?'up':v<0?'down':'',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function load(){
