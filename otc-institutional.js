@@ -1,5 +1,5 @@
 (() => {
-  const API = 'https://taiwan-stock-test-api.onrender.com';
+  const API = 'https://taiwan-stock-intelligence-api.onrender.com';
   let inst = [], instInfo = null, quotes = [], selectedRank = null;
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
