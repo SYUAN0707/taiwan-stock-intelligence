@@ -29,7 +29,7 @@
     if (!r.ok || !Array.isArray(d.items) || !d.items.length) throw Error(d.error || '上市＋上櫃法人資料暫時無法取得');
     inst = d.items; instInfo = d;
   }
-  const quote = code => quotes.find(x=>x.code===code);
+  const quote = code => quotes.find(x=>String(x.code)===String(code));
   function chart(rows) {
     if(!Array.isArray(rows)||rows.length<20) return '<p class="sub">官方歷史資料不足 20 個交易日，暫不繪製 K 線或計算月線。</p>';
     const data=rows.slice(-40), closes=data.map(x=>Number(x.close));
@@ -175,7 +175,8 @@
           // The main page and detail module fetch quotes independently. If a user
           // clicks before this module's prefetch finishes, wait for the data
           // instead of silently doing nothing.
-          if(!quotes.length) await loadQuotes();
+          if(!quote(code)) await loadQuotes();
+          if(!quote(code)) throw Error('行情清單中找不到股票代號 '+code);
           showStock(code);
         } catch(err) {
           const notice=$('notice');
