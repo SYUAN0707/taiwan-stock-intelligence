@@ -131,20 +131,53 @@
       box.scrollIntoView({behavior:'smooth',block:'center'});
     });
   }
+  const top20Holdings = [
+    {code:'2330',name:'台積電',weight:58.92,sector:'半導體'},
+    {code:'2454',name:'聯發科',weight:6.42,sector:'IC設計'},
+    {code:'2317',name:'鴻海',weight:2.99,sector:'電子製造服務'},
+    {code:'2308',name:'台達電',weight:2.27,sector:'電源與電機'},
+    {code:'3711',name:'日月光投控',weight:2.01,sector:'封裝測試'},
+    {code:'2891',name:'中信金',weight:1.44,sector:'金融'},
+    {code:'2881',name:'富邦金',weight:1.38,sector:'金融'},
+    {code:'1303',name:'南亞',weight:1.38,sector:'塑膠與材料'},
+    {code:'2303',name:'聯電',weight:1.20,sector:'晶圓代工'},
+    {code:'2882',name:'國泰金',weight:1.16,sector:'金融'},
+    {code:'2383',name:'台光電',weight:1.11,sector:'電子材料'},
+    {code:'3037',name:'欣興',weight:0.97,sector:'IC載板與PCB'},
+    {code:'3017',name:'奇鋐',weight:0.96,sector:'散熱'},
+    {code:'2887',name:'台新新光金',weight:0.96,sector:'金融'},
+    {code:'2885',name:'元大金',weight:0.82,sector:'金融'},
+    {code:'2382',name:'廣達',weight:0.78,sector:'伺服器與電子製造'},
+    {code:'2345',name:'智邦',weight:0.78,sector:'網通設備'},
+    {code:'2884',name:'玉山金',weight:0.75,sector:'金融'},
+    {code:'2412',name:'中華電',weight:0.70,sector:'電信'},
+    {code:'2886',name:'兆豐金',weight:0.69,sector:'金融'}
+  ];
   function showSupply() {
-    $('pageTitle').textContent='權值股／個股搜尋';
-    $('pageSub').textContent='可搜尋目前官方行情清單中的所有上市、上櫃股票；供應鏈關係僅顯示已查證資料';
-    $('content').innerHTML='<section class="panel"><div class="panelhead"><h2>搜尋股票</h2></div><div class="filters"><input id="chainSearch" placeholder="輸入股票代號或名稱，例如 2330、台積電"><button class="primary" id="chainGo">搜尋</button></div><div id="chainResults"></div></section>';
+    $('pageTitle').textContent='0050 權值股供應鏈';
+    $('pageSub').textContent='依元大台灣50（0050）最新可查持股權重快照，優先追蹤前20大成分股';
+    const rows = top20Holdings.map((h,i) => {
+      const q=quote(h.code);
+      const price=q?n(q.price):'—';
+      const change=q?(q.change==null?'—':(q.change>0?'+':'')+n(q.change)):'—';
+      const changeClass=q?cls(q.change):'';
+      const status=h.code==='2330'?'初步關聯清單（待逐筆核實）':'供應鏈關係查證中';
+      return '<tr data-code="'+h.code+'"><td>'+(i+1)+'</td><td><b>'+esc(h.name)+'</b><span class="code">'+h.code+'</span></td><td>'+h.weight.toFixed(2)+'%</td><td>'+esc(h.sector)+'</td><td>'+price+'</td><td class="'+changeClass+'">'+change+'</td><td><span class="tag">'+status+'</span></td><td><button class="secondary supply-detail" data-code="'+h.code+'">個股分析</button></td></tr>';
+    }).join('');
+    $('content').innerHTML =
+      '<section class="panel"><div class="panelhead"><div><h2>0050 權重前20大</h2><div class="sub">持股資料日期：2026/11/18｜按基金投資比例由高至低排序</div></div><span class="tag">前20大</span></div><div class="notice">權重是0050基金持有該股票的投資比例，不是公司市值排名，也不是台灣50指數權重。持股權重會變動，以下為日期快照。</div><div class="tablewrap"><table><thead><tr><th>排名</th><th>股票</th><th>0050權重</th><th>產業類別</th><th>本站收盤價</th><th>本站漲跌</th><th>供應鏈資料狀態</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="sub">權重來源：MoneyDJ 元大台灣50全部持股明細（資料日期2026/11/18）。本站股價取自本網站官方每日行情，日期依市場資料標示。</p><p><a href="https://www.moneydj.com/ETF/X/Basic/Basic0007B.xdjhtm?etfid=0050.TW" target="_blank" rel="noopener">查看0050完整持股明細 ↗</a></p></section>'+
+      '<section class="panel"><div class="panelhead"><h2>查詢供應鏈個股</h2></div><div class="filters"><input id="chainSearch" placeholder="輸入股票代號或名稱，例如 2330、台積電"><button class="primary" id="chainGo">搜尋</button></div><div id="chainResults"><p class="sub">點選上方前20大股票可開啟個股分析；輸入代號可查看已整理的供應鏈資料。</p></div></section>'+
+      '<section class="panel"><h2>供應鏈資料原則</h2><p>只把公司年報、法說會、公開資訊或公司正式揭露可支持的客戶／供應商關係列為已查證。僅屬同產業、合作可能或市場傳聞的公司，不會標示成直接供應鏈。</p><p class="sub">金融股及電信股不適合硬套原物料供應鏈，會改以金融服務、設備採購或上下游產業關聯分類，並註明關係類型。</p></section>';
+    document.querySelectorAll('.supply-detail').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
+    document.querySelectorAll('tr[data-code]').forEach(row=>row.onclick=e=>{if(!e.target.closest('button'))showStock(row.dataset.code);});
     const run=()=>{
-      const raw=$('chainSearch').value.trim();
-      const v=raw.toLowerCase();
-      if(!v){$('chainResults').innerHTML='<section class="panel"><p>請輸入股票代號或名稱。</p></section>';return;}
-      const q=quotes.find(x=>String(x.code).toLowerCase()===v || String(x.name).toLowerCase()===v)
-        || quotes.find(x=>(String(x.code)+' '+String(x.name)).toLowerCase().includes(v));
-      if(!q){$('chainResults').innerHTML='<section class="panel"><p>行情清單中找不到「'+esc(raw)+'」，請確認代號或名稱。</p></section>';return;}
-      const base='<section class="panel"><h2>'+esc(q.name)+'（'+esc(q.code)+'）・'+esc(q.market)+'</h2><p>官方收盤價：'+n(q.price)+' 元；資料日期：'+esc(q.trade_date||'—')+'</p><button class="secondary" id="chainStockDetail">查看個股詳細頁</button></section>';
-      const relation=q.code==='2330'?'<section class="panel"><h2>台積電已整理的產業關聯廠商</h2><p class="sub">以下為初步關聯分類；直接供應／客戶關係仍須逐筆依公開文件核實。</p><div class="chainlist">'+peerCards(tsmcChain)+'</div></section>':'<section class="panel"><h2>供應鏈資料尚未建置</h2><p>目前可以搜尋這檔股票，但尚未完成此公司的供應商、客戶及上下游關係查證，因此不會推測或列出未證實廠商。</p></section>';
-      $('chainResults').innerHTML=base+relation;
+      const raw=$('chainSearch').value.trim(),v=raw.toLowerCase();
+      if(!v){$('chainResults').innerHTML='<p>請輸入股票代號或名稱。</p>';return;}
+      const h=top20Holdings.find(x=>x.code.toLowerCase()===v||x.name.toLowerCase()===v);
+      const q=quote(h?h.code:raw) || quotes.find(x=>(String(x.code)+' '+String(x.name)).toLowerCase().includes(v));
+      if(!q){$('chainResults').innerHTML='<p>行情清單中找不到「'+esc(raw)+'」，請確認代號或名稱。</p>';return;}
+      const relation=q.code==='2330'?'<h3>台積電產業關聯廠商（初步清單）</h3><p class="sub">目前既有清單列出封裝測試、測試服務、載具與廠務系統業者；這些是產業關聯線索，不等同已證實的直接供應商。後續逐筆補上公司揭露來源。</p><div class="chainlist">'+peerCards(tsmcChain)+'</div>':'<h3>供應鏈關係查證中</h3><p>這檔股票已列入0050權重追蹤，但供應商、客戶或合作關係尚未完成公開文件核實，目前不顯示未經證實的公司名單。</p>';
+      $('chainResults').innerHTML='<div class="stockcard"><h3>'+esc(q.name)+'（'+esc(q.code)+'）</h3><p>本站收盤價：'+n(q.price)+' 元｜行情日期：'+esc(q.trade_date||'—')+'</p><button class="secondary" id="chainStockDetail">查看個股分析</button></div><section class="panel">'+relation+'</section>';
       $('chainStockDetail').onclick=()=>showStock(q.code);
       document.querySelectorAll('.open-stock').forEach(b=>b.onclick=()=>showStock(b.dataset.code));
     };
