@@ -48,7 +48,7 @@ def quotes():
         day=next(iter(ds));dates["上櫃"]=day
         for x in rows:
             c=str(x.get("SecuritiesCompanyCode") or "").strip();p=num(x.get("Close"))
-            if c and p is not None: out[c]={"code":c,"name":str(x.get("CompanyName") or "").strip(),"market":"上櫃","open":num(x.get("Open")),"high":num(x.get("High")),"low":num(x.get("Low")),"price":p,"change":num(x.get("Change")),"volume":num(x.get("TradingShares")),"amount":num(x.get("TradingAmount")),"trades":num(x.get("Transaction")),"trade_date":day,"price_label":"收盤價（非即時）","quote_source":"TPEx 官方每日開放資料"}
+            if c and p is not None: out[c]={"code":c,"name":str(x.get("CompanyName") or "").strip(),"market":"上櫃","open":num(x.get("Open")),"high":num(x.get("High")),"low":num(x.get("Low")),"price":p,"change":num(x.get("Change")),"volume":num(x.get("TradingShares")),"amount":num(x.get("TransactionAmount")),"trades":num(x.get("Transaction")),"trade_date":day,"price_label":"收盤價（非即時）","quote_source":"TPEx 官方每日開放資料"}
     except Exception as e: errors.append("上櫃行情："+str(e))
     return {"updated_at":fetched,"market_dates":dates,"items":list(out.values()),"count":len(out),"errors":errors,"sources":{"上市":"https://data.gov.tw/dataset/11549","上櫃":"https://data.gov.tw/dataset/11371"},"disclaimer":"官方每日收盤行情，非盤中即時報價；各市場均附實際資料日期，未更新時不以舊資料冒充今日行情。"}
 
