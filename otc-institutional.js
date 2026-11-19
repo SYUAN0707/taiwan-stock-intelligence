@@ -159,7 +159,7 @@
     } else if(view==='supply') {if(!quotes.length)try{await loadQuotes()}catch{} showSupply();}
     else if(view==='market'||view==='stocks') {if(!quotes.length)try{await loadQuotes()}catch{}}
   }
-  document.addEventListener('click',e=>{
+  document.addEventListener('click',async e=>{
     const nav=e.target.closest('nav button[data-view]');
     if(nav&&(nav.dataset.view==='chips'||nav.dataset.view==='supply')) {
       e.preventDefault();e.stopImmediatePropagation();
@@ -169,7 +169,19 @@
     const row=e.target.closest('#quotesTable tbody tr');
     if(row && !e.target.closest('button')) {
       const code=row.querySelector('.code')?.textContent.trim();
-      if(code){e.preventDefault();e.stopImmediatePropagation();if(!quotes.length)quotes=window.__twQuotes||[];showStock(code);}
+      if(code){
+        e.preventDefault();e.stopImmediatePropagation();
+        try {
+          // The main page and detail module fetch quotes independently. If a user
+          // clicks before this module's prefetch finishes, wait for the data
+          // instead of silently doing nothing.
+          if(!quotes.length) await loadQuotes();
+          showStock(code);
+        } catch(err) {
+          const notice=$('notice');
+          if(notice) notice.textContent='個股資料載入失敗：'+err.message+'。請稍後再試。';
+        }
+      }
     }
   },true);
   const css=document.createElement('style');
