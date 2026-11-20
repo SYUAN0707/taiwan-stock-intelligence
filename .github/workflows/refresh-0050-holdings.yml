@@ -1,6 +1,11 @@
 name: Refresh 0050 top holdings
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/update_0050_holdings.py'
+      - '.github/workflows/refresh-0050-holdings.yml'
   schedule:
     - cron: "0 7 * * *" # 15:00 Asia/Taipei
   workflow_dispatch:
