@@ -286,12 +286,36 @@ def institutional():
         "disclaimer": "合併證交所上市 T86 與櫃買中心上櫃三大法人資料；僅納入行情清單中的四碼普通股，排除 ETF、ETN、權證等非普通股。只有兩市場資料日期完全相同時才產生全市場排行。外資欄位為外陸資買賣超（不含外資自營商），自營商為自行買賣與避險合計；單位為股。"
     }
 
+def read_data_file(path, default):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return default
+
+def supply_chain_data():
+    holdings = read_data_file("data/0050_holdings.json", {
+        "fund_code":"0050","fund_name":"元大台灣50","source_date":"",
+        "checked_at":None,"count":0,"items":[],
+        "error":"尚未取得第一次成功的官方0050持股更新。"
+    })
+    relations = read_data_file("data/supply_chain_relations.json", {
+        "checked_at":None,"statuses":["已證實","待查證","未公開","產業關聯"],"items":[]
+    })
+    return {"holdings":holdings,"relations":relations,
+            "updated_at":holdings.get("checked_at"),
+            "disclaimer":"0050權重以元大投信官方基金持股為準；供應鏈僅列有公開證據支持的關係，不以同產業推定直接供應關係。"}
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         p=urlparse(self.path).path
         if p=="/api/health":return self.send_json({"ok":True})
         if p in ("/api/realtime","/api/t86"):
             return self.send_json({"error":"此功能已停用；目前僅提供官方每日收盤行情。","items":[]},410)
+        if p == "/api/supply-chain":
+            try:v=cached(p,60,supply_chain_data);code=200
+            except Exception as e:v={"error":str(e),"holdings":{"items":[]},"relations":{"items":[]}};code=502
+            return self.send_json(v,code)
         if p == "/api/quotes":
             try:v=cached(p,300,quotes);code=200
             except Exception as e:v={"error":str(e),"items":[]};code=502
