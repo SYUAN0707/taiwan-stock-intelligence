@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "checked_at": "2026-11-20",
-  "methodology": "只將公司年報、官方網站或官方新聞稿明確揭露的交易／供應關係列為已證實。若客戶或供應商僅以代號、未具名或未公開，不推測其身分；金融控股及電信業不套用製造業供應鏈。",
+  "methodology": "僅將公司官方年報、官方網站或官方新聞稿明確揭露的供應商／客戶／製造合作關係列為已證實。若僅揭露供應商類別而未具名，標示未公開；第三方資料整理未經原始年報核對者標示待查證。金融控股及電信業不套用製造業供應鏈。",
   "statuses": [
     "已證實",
     "待查證",
@@ -17,10 +17,10 @@
       "counterparty_code": "2330",
       "product_or_service": "晶圓代工；聯發科年報列示其晶圓主要向專業晶圓代工廠採購，包含台積電。",
       "status": "已證實",
-      "source_title": "MediaTek 2024 Annual Report",
-      "source_date": "2025",
-      "source_url": "https://www.mediatek.com/hubfs/728015/MediaTek%20Assets/Pdfs/Annual%20Reports/2024-English-Annual-Report.pdf",
-      "evidence_note": "年報 Supply of Raw Materials 段落明確列出台積電為晶圓供應商。"
+      "source_title": "MediaTek 2023 Annual Report",
+      "source_date": "2024",
+      "source_url": "https://www.mediatek.com/hubfs/MediaTek%20Assets/Pdfs/Annual%20Reports/2023-English-Annual-Report.pdf",
+      "evidence_note": "聯發科官方2023年英文年報 Supply of Raw Materials 段落明列 TSMC、UMC、GlobalFoundries 為晶圓代工供應商。"
     },
     {
       "stock_code": "2454",
@@ -30,10 +30,10 @@
       "counterparty_code": "2303",
       "product_or_service": "晶圓代工；聯發科年報列示其晶圓主要向專業晶圓代工廠採購，包含聯電。",
       "status": "已證實",
-      "source_title": "MediaTek 2024 Annual Report",
-      "source_date": "2025",
-      "source_url": "https://www.mediatek.com/hubfs/728015/MediaTek%20Assets/Pdfs/Annual%20Reports/2024-English-Annual-Report.pdf",
-      "evidence_note": "年報 Supply of Raw Materials 段落明確列出聯電為晶圓供應商。"
+      "source_title": "MediaTek 2023 Annual Report",
+      "source_date": "2024",
+      "source_url": "https://www.mediatek.com/hubfs/MediaTek%20Assets/Pdfs/Annual%20Reports/2023-English-Annual-Report.pdf",
+      "evidence_note": "聯發科官方2023年英文年報 Supply of Raw Materials 段落明列 TSMC、UMC、GlobalFoundries 為晶圓代工供應商。"
     },
     {
       "stock_code": "2303",
@@ -77,11 +77,11 @@
       "direction": "上游供應商",
       "counterparty": "台塑石化",
       "product_or_service": "乙烯等石化原料供應；南亞2025年年報列為主要原料供應廠商。",
-      "status": "已證實",
+      "status": "待查證",
       "source_title": "南亞塑膠2025年度年報（資料整理）",
       "source_date": "2026",
       "source_url": "https://xn--g10a.tw/c/1303/",
-      "evidence_note": "年報資料整理列示台塑石化為乙烯主要供應商，且列為年度主要供應商。"
+      "evidence_note": "目前找到的是第三方年報內容整理頁，尚未逐頁核對南亞官方年報原文，因此不列為已證實。"
     },
     {
       "stock_code": "1303",
@@ -89,24 +89,11 @@
       "direction": "上游供應商",
       "counterparty": "台塑",
       "product_or_service": "塑膠原料供應；南亞2025年年報列示台塑為塑膠粉主要供應廠商。",
-      "status": "已證實",
+      "status": "待查證",
       "source_title": "南亞塑膠2025年度年報（資料整理）",
       "source_date": "2026",
       "source_url": "https://xn--g10a.tw/c/1303/",
-      "evidence_note": "年報資料整理明確列示台塑為塑膠粉主要供應廠商。"
-    },
-    {
-      "stock_code": "2382",
-      "stock_name": "廣達",
-      "direction": "上游供應商",
-      "counterparty": "聯發科（2454）",
-      "counterparty_code": "2454",
-      "product_or_service": "處理器／GPU供應來源之一；公開年報內容整理列出聯發科為廣達處理器（CPU/GPU）主要供應來源之一。",
-      "status": "待查證",
-      "source_title": "廣達電腦2025年度年報內容整理",
-      "source_date": "2026",
-      "source_url": "https://xn--g10a.tw/c/2382/",
-      "evidence_note": "年報內容整理指出供應來源包括NVIDIA、Intel、AMD、Qualcomm及聯發科；尚待直接核對廣達官方年報原始頁面後升級為已證實。"
+      "evidence_note": "目前找到的是第三方年報內容整理頁，尚未逐頁核對南亞官方年報原文，因此不列為已證實。"
     },
     {
       "stock_code": "2308",
@@ -145,16 +132,40 @@
       "evidence_note": "確認客戶產業範圍及客戶數量，不將未公開客戶猜測為特定0050成分股。"
     },
     {
+      "stock_code": "2317",
+      "stock_name": "鴻海",
+      "direction": "製造合作夥伴",
+      "counterparty": "Robust.AI",
+      "product_or_service": "為Robust.AI Carter協作機器人平台擴大製造產能的策略製造合作。",
+      "status": "已證實",
+      "source_title": "Robust.AI Partners With Foxconn To Accelerate and Scale Manufacturing of Carter Warehouse Automation Robots",
+      "source_date": "2025-05-16",
+      "source_url": "https://ningxia.foxconn.com/en-us/press-center/press-releases/latest-news/1597",
+      "evidence_note": "鴻海官方新聞稿明確揭露與Robust.AI的製造合作；此為具名製造合作，不代表其為0050成分股供應鏈客戶。"
+    },
+    {
+      "stock_code": "2345",
+      "stock_name": "智邦",
+      "direction": "上游供應鏈",
+      "counterparty": "IC、PCB、電子零組件、線材、塑膠件、金屬件及包裝材料供應商（未逐一具名）",
+      "product_or_service": "通訊與雲端設備產品所需原物料；智邦2025永續報告揭露約594家原物料供應商及採購類別。",
+      "status": "未公開",
+      "source_title": "Accton 2025 ESG Report",
+      "source_date": "2026",
+      "source_url": "https://www.accton.com/wp-content/uploads/2026/06/Accton-2025ESG-EN.pdf",
+      "evidence_note": "官方報告揭露供應商數量及原料類別，未在該段落逐一具名，不推定特定0050公司是其直接供應商。"
+    },
+    {
       "stock_code": "2382",
       "stock_name": "廣達",
       "direction": "上游供應鏈",
       "counterparty": "電子零組件、金屬機構件及包裝材料供應商（未逐一具名）",
-      "product_or_service": "筆電、伺服器及雲端基礎建設設備所需零組件；廣達2025永續報告揭露上游供應鏈類別及供應商管理。",
+      "product_or_service": "筆電、伺服器及雲端設備所需零組件；廣達2025永續報告揭露上游供應商類別、供應商數量與管理機制。",
       "status": "未公開",
-      "source_title": "廣達2025永續報告書",
+      "source_title": "廣達2025永續報告－永續經營與營運治理",
       "source_date": "2026",
-      "source_url": "https://www.quantatw.com/Quanta/ESG/CH/Quanta_ESG_CN_2025.pdf",
-      "evidence_note": "官方報告支持供應鏈類別與管理範圍，但不代表具名廠商均為直接供應商。"
+      "source_url": "https://www.quantatw.com/Quanta/chinese/esg/ESG2025/ch01.html",
+      "evidence_note": "官方報告揭露供應商類型與供應鏈管理，未在該頁逐一具名。"
     }
   ]
 }
