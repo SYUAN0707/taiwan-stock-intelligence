@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 OUT = Path("data/0050_holdings.json")
 YUANTA_API = "https://www.yuantaetfs.com/api/StkWeights?date=&fundid=1066"
 YUANTA_PAGE = "https://www.yuantaetfs.com/product/detail/0050/ratio"
+STOCKANALYSIS_PAGE = "https://stockanalysis.com/quote/tpe/0050/holdings/"
 MONEYDJ_PAGE = "https://www.moneydj.com/etf/x/basic/basic0007b.xdjhtm?etfid=0050.tw"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/125 Safari/537.36",
@@ -86,31 +87,56 @@ def json_rows(payload):
 def parse_html_holdings(html):
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(" ", strip=True)
-    dm = re.search(r"(?:資料日期|資料時間|Trade Date)\s*[:：]?\s*(20\d{2})[/-](\d{1,2})[/-](\d{1,2})", text, re.I)
-    day = parse_date("/".join(dm.groups())) if dm else ""
+    date_match = re.search(
+        r"(?:資料日期|資料時間|Trade Date|Last updated|Last checked|As of)\s*[:：]?\s*"
+        r"((?:20\d{2}[/-]\d{1,2}[/-]\d{1,2})|(?:[A-Z][a-z]{2,8}\s+\d{1,2},\s+20\d{2}))",
+        text, re.I
+    )
+    day = parse_date(date_match.group(1)) if date_match else ""
     rows = []
     for tr in soup.find_all("tr"):
         cells = [x.get_text(" ", strip=True) for x in tr.find_all(["td", "th"])]
-        if len(cells) < 2:
+        joined = " ".join(cells)
+        cm = re.search(r"(?:TPE:|TWSE:)?(\d{4,6})(?!\d)", joined)
+        wm = re.search(r"(?<![\d.])(\d{1,2}(?:\.\d+)?)\s*%", joined)
+        if not cm or not wm:
             continue
-        code = normalize_code(cells[0])
-        if not code:
+        code = cm.group(1)
+        ci = next((i for i, x in enumerate(cells) if re.search(r"(?:TPE:|TWSE:)?"+code+r"(?!\d)", x)), 0)
+        name = ""
+        for cell in cells[ci+1:]:
+            candidate = re.sub(r"^(?:TPE:|TWSE:)?\d{4,6}\s*", "", cell).strip()
+            if candidate and "%" not in candidate and not re.fullmatch(r"[\d,.$BMK+-]+", candidate):
+                name = candidate
+                break
+        if not name:
+            name = re.sub(r"^(?:TPE:|TWSE:)?"+code+r"\s*", "", cells[ci]).strip()
+        if not name:
             continue
-        name_match = re.search(r"([^\d()（）]+)", cells[0])
-        name = name_match.group(1).strip() if name_match else ""
-        # MoneyDJ rows have name/code in column 1, weight in column 2, shares in column 3.
-        weight = normalize_weight(cells[1])
-        if weight is None:
-            nums = re.findall(r"\d+(?:\.\d+)?", " ".join(cells[1:]))
-            weight = normalize_weight(nums[0]) if nums else None
         shares = None
-        if len(cells) >= 3:
-            try:
-                shares = int(float(cells[2].replace(",", "")))
-            except ValueError:
-                pass
-        if name and weight is not None and 0 < weight < 100:
+        for cell in cells:
+            candidate = cell.replace(",", "").strip()
+            if re.fullmatch(r"\d{5,}", candidate):
+                shares = int(candidate)
+                break
+        weight = float(wm.group(1))
+        if 0 < weight < 100:
             rows.append({"code":code,"name":name,"shares":shares,"weight":weight,"trade_date":day})
+
+    # Yuanta holdings may be rendered as div text rather than HTML table rows.
+    if len(rows) < 20:
+        lines = [re.sub(r"\s+", " ", x).strip() for x in soup.get_text("\n", strip=True).splitlines() if x.strip()]
+        for i, line in enumerate(lines):
+            if not re.fullmatch(r"\d{4,6}", line) or i + 3 >= len(lines):
+                continue
+            code, name = line, lines[i+1]
+            try:
+                shares = int(lines[i+2].replace(",", ""))
+                weight = float(lines[i+3].replace("%", "").strip())
+            except ValueError:
+                continue
+            if name and 0 < weight < 100:
+                rows.append({"code":code,"name":name,"shares":shares,"weight":weight,"trade_date":day})
     return rows, day
 
 def dedupe_sort(rows):
@@ -159,7 +185,8 @@ def main():
     sources = [
         lambda: fetch_json_source(session),
         lambda: fetch_html_source(session, YUANTA_PAGE, "元大投信官方持股頁"),
-        lambda: fetch_html_source(session, MONEYDJ_PAGE, "MoneyDJ 0050 全部持股（備援來源）"),
+        lambda: fetch_html_source(session, STOCKANALYSIS_PAGE, "StockAnalysis 0050 全部持股（次級備援來源）"),
+        lambda: fetch_html_source(session, MONEYDJ_PAGE, "MoneyDJ 0050 全部持股（次級備援來源）"),
     ]
     result = None
     for get_source in sources:
