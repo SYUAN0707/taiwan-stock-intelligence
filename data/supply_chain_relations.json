@@ -1702,6 +1702,54 @@
       "source_date": "2025",
       "source_url": "https://www.cathayholdings.com/holdings/-/media/1f941e9c1e3345688542462ab874ea37.pdf?sc_lang=zh-tw",
       "evidence_note": "年報列示資訊系統設備／軟體環境，尚不足以證明目前直接採購或合約關係。"
+    },
+    {
+      "stock_code": "2383",
+      "stock_name": "台光電",
+      "direction": "上游供應商",
+      "counterparty": "未公開具名原物料供應商群",
+      "product_or_service": "台光電2024永續報告揭露主要原物料為銅箔、玻璃布及化學品；另包含玻纖布、環氧樹脂、酚醛樹脂及製程檢測設備等供應鏈類別，未逐家公開供應商名稱。",
+      "status": "未公開",
+      "source_title": "台光電子2024永續報告－永續供應鏈",
+      "source_date": "2025",
+      "source_url": "https://www.emctw.com/upload/media/New_CSR/csr_report/2024_ESG%20report_TW.pdf",
+      "evidence_note": "公司官方報告揭露原物料類別及供應鏈結構，但未公開具名供應商名單。"
+    },
+    {
+      "stock_code": "2383",
+      "stock_name": "台光電",
+      "direction": "下游客戶",
+      "counterparty": "PCB、軟板及IC載板製造業者（未具名）",
+      "product_or_service": "台光電官方報告將銅箔基板定位為PCB產業鏈中游產品，下游為硬板、軟板、IC載板製造及各類電子產品；此為產業鏈位置，不代表具名直接客戶。",
+      "status": "產業關聯",
+      "source_title": "台光電子2024永續報告－永續供應鏈",
+      "source_date": "2025",
+      "source_url": "https://www.emctw.com/upload/media/New_CSR/csr_report/2024_ESG%20report_TW.pdf",
+      "evidence_note": "公司官方報告明確說明其產品在PCB產業鏈中的中游位置及下游應用類別。"
+    },
+    {
+      "stock_code": "3017",
+      "stock_name": "奇鋐",
+      "direction": "上游供應商",
+      "counterparty": "未公開具名材料與零組件供應商群",
+      "product_or_service": "奇鋐官方公司介紹確認其為散熱解決方案供應商；公開公司介紹未逐家列出其材料、零組件或設備供應商。",
+      "status": "未公開",
+      "source_title": "奇鋐科技公司介紹",
+      "source_date": "2026",
+      "source_url": "https://www.avc.co/zh-tw/About-AVC/CompanyProfile",
+      "evidence_note": "公司官方介紹確認散熱解決方案業務，但未公開具名上游供應商清單。"
+    },
+    {
+      "stock_code": "3017",
+      "stock_name": "奇鋐",
+      "direction": "下游客戶",
+      "counterparty": "伺服器、資料中心及電子設備應用市場（未具名）",
+      "product_or_service": "奇鋐官方介紹確認其提供整體散熱解決方案；本筆僅呈現產品應用市場，不代表已查證的具名直接客戶。",
+      "status": "產業關聯",
+      "source_title": "奇鋐科技公司介紹",
+      "source_date": "2026",
+      "source_url": "https://www.avc.co/zh-tw/About-AVC/CompanyProfile",
+      "evidence_note": "官方公司介紹揭露散熱解決方案產品定位，未揭露具名直接客戶。"
     }
   ]
 }
