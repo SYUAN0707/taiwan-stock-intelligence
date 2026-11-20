@@ -206,10 +206,18 @@ def main():
         raise RuntimeError("所有持股來源均未通過資料驗證；保留上一版，不覆寫檔案。\n" + "\n".join(errors))
 
     rows, source_date, source_url, source_name = result
+    chinese_names = {
+        "2330":"台積電","2454":"聯發科","2317":"鴻海","2308":"台達電","3711":"日月光投控",
+        "2891":"中信金","2881":"富邦金","1303":"南亞","2303":"聯電","2882":"國泰金",
+        "2383":"台光電","2887":"台新新光金","3037":"欣興","3017":"奇鋐","2885":"元大金",
+        "2382":"廣達","2345":"智邦","2884":"玉山金","2412":"中華電","2886":"兆豐金"
+    }
     top = []
     for rank, row in enumerate(rows[:20], 1):
         row = dict(row)
         row["rank"] = rank
+        row["name_en"] = row["name"]
+        row["name"] = chinese_names.get(row["code"], row["name"])
         row["trade_date"] = row.get("trade_date") or source_date
         top.append(row)
 
