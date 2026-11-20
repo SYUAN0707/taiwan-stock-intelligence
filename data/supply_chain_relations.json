@@ -437,11 +437,11 @@
       "direction": "下游客戶",
       "counterparty": "Analog Devices, Inc.（ADI）",
       "product_or_service": "ADI 與 ASE 公告合作，ASE 規劃提供 IC 封裝與測試製造服務，雙方並宣布共同投資及長期供應協議規劃；公告當時交易仍待正式文件及交割條件完成。",
-      "status": "已證實",
+      "status": "待查證",
       "source_title": "ASE and Analog Devices Announce Strategic Collaboration",
       "source_date": "2025-10-21",
       "source_url": "https://www.aseglobal.com/press-room/ase-and-analog-devices-announce-strategic-collaboration",
-      "evidence_note": "日月光官方公告明確指出 ASE 將為 ADI 提供製造服務並規劃長期供應協議；此處確認公開合作關係，不代表所有交易條件均已完成。"
+      "evidence_note": "ASE與ADI於2025-10-21簽署具約束力的合作備忘錄，規劃由ASE收購ADI檳城廠並提供長期製造服務；正式交易文件、交割及長期供應協議仍有條件，故不標示為已完成客戶關係。"
     },
     {
       "stock_code": "3711",
