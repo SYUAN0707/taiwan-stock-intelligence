@@ -6,168 +6,188 @@
   "source_type": "secondary_fallback",
   "source_url": "https://stockanalysis.com/quote/tpe/0050/holdings/",
   "source_date": "2026-11-19",
-  "checked_at": "2026-11-20T14:58:02+08:00",
+  "checked_at": "2026-11-20T14:58:28+08:00",
   "count": 20,
   "items": [
     {
       "code": "2330",
-      "name": "Taiwan Semiconductor Manufacturing Company Limited",
+      "name": "台積電",
       "shares": 649584425,
       "weight": 59.35,
       "trade_date": "2026-11-19",
-      "rank": 1
+      "rank": 1,
+      "name_en": "Taiwan Semiconductor Manufacturing Company Limited"
     },
     {
       "code": "2454",
-      "name": "MediaTek Inc.",
+      "name": "聯發科",
       "shares": 39081436,
       "weight": 6.32,
       "trade_date": "2026-11-19",
-      "rank": 2
+      "rank": 2,
+      "name_en": "MediaTek Inc."
     },
     {
       "code": "2317",
-      "name": "Hon Hai Precision Industry Co., Ltd.",
+      "name": "鴻海",
       "shares": 324315688,
       "weight": 3.11,
       "trade_date": "2026-11-19",
-      "rank": 3
+      "rank": 3,
+      "name_en": "Hon Hai Precision Industry Co., Ltd."
     },
     {
       "code": "2308",
-      "name": "Delta Electronics, Inc.",
+      "name": "台達電",
       "shares": 51275380,
       "weight": 2.23,
       "trade_date": "2026-11-19",
-      "rank": 4
+      "rank": 4,
+      "name_en": "Delta Electronics, Inc."
     },
     {
       "code": "3711",
-      "name": "ASE Technology Holding Co., Ltd.",
+      "name": "日月光投控",
       "shares": 88130058,
       "weight": 1.93,
       "trade_date": "2026-11-19",
-      "rank": 5
+      "rank": 5,
+      "name_en": "ASE Technology Holding Co., Ltd."
     },
     {
       "code": "2891",
-      "name": "CTBC Financial Holding Co., Ltd.",
+      "name": "中信金",
       "shares": 469963303,
       "weight": 1.49,
       "trade_date": "2026-11-19",
-      "rank": 6
+      "rank": 6,
+      "name_en": "CTBC Financial Holding Co., Ltd."
     },
     {
       "code": "2881",
-      "name": "Fubon Financial Holding Co., Ltd.",
+      "name": "富邦金",
       "shares": 221599068,
       "weight": 1.43,
       "trade_date": "2026-11-19",
-      "rank": 7
+      "rank": 7,
+      "name_en": "Fubon Financial Holding Co., Ltd."
     },
     {
       "code": "1303",
-      "name": "Nan Ya Plastics Corporation",
+      "name": "南亞",
       "shares": 130882060,
       "weight": 1.3,
       "trade_date": "2026-11-19",
-      "rank": 8
+      "rank": 8,
+      "name_en": "Nan Ya Plastics Corporation"
     },
     {
       "code": "2303",
-      "name": "United Microelectronics Corporation",
+      "name": "聯電",
       "shares": 309794552,
       "weight": 1.19,
       "trade_date": "2026-11-19",
-      "rank": 9
+      "rank": 9,
+      "name_en": "United Microelectronics Corporation"
     },
     {
       "code": "2882",
-      "name": "Cathay Financial Holding Co., Ltd.",
+      "name": "國泰金",
       "shares": 253402823,
       "weight": 1.14,
       "trade_date": "2026-11-19",
-      "rank": 10
+      "rank": 10,
+      "name_en": "Cathay Financial Holding Co., Ltd."
     },
     {
       "code": "2383",
-      "name": "Elite Material Co., Ltd.",
+      "name": "台光電",
       "shares": 7713466,
       "weight": 1.05,
       "trade_date": "2026-11-19",
-      "rank": 11
+      "rank": 11,
+      "name_en": "Elite Material Co., Ltd."
     },
     {
       "code": "2887",
-      "name": "TS Financial Holding Co., Ltd.",
+      "name": "台新新光金",
       "shares": 622406196,
       "weight": 0.97,
       "trade_date": "2026-11-19",
-      "rank": 12
+      "rank": 12,
+      "name_en": "TS Financial Holding Co., Ltd."
     },
     {
       "code": "3037",
-      "name": "Unimicron Technology Corp.",
+      "name": "欣興",
       "shares": 35035680,
       "weight": 0.91,
       "trade_date": "2026-11-19",
-      "rank": 13
+      "rank": 13,
+      "name_en": "Unimicron Technology Corp."
     },
     {
       "code": "3017",
-      "name": "Asia Vital Components Co., Ltd.",
+      "name": "奇鋐",
       "shares": 8498340,
       "weight": 0.9,
       "trade_date": "2026-11-19",
-      "rank": 14
+      "rank": 14,
+      "name_en": "Asia Vital Components Co., Ltd."
     },
     {
       "code": "2885",
-      "name": "Yuanta Financial Holding Co., Ltd.",
+      "name": "元大金",
       "shares": 304726931,
       "weight": 0.84,
       "trade_date": "2026-11-19",
-      "rank": 15
+      "rank": 15,
+      "name_en": "Yuanta Financial Holding Co., Ltd."
     },
     {
       "code": "2382",
-      "name": "Quanta Computer Inc.",
+      "name": "廣達",
       "shares": 70262421,
       "weight": 0.8,
       "trade_date": "2026-11-19",
-      "rank": 16
+      "rank": 16,
+      "name_en": "Quanta Computer Inc."
     },
     {
       "code": "2345",
-      "name": "Accton Technology Corporation",
+      "name": "智邦",
       "shares": 13161367,
       "weight": 0.77,
       "trade_date": "2026-11-19",
-      "rank": 17
+      "rank": 17,
+      "name_en": "Accton Technology Corporation"
     },
     {
       "code": "2884",
-      "name": "E.SUN Financial Holding Company, Ltd.",
+      "name": "玉山金",
       "shares": 424641993,
       "weight": 0.75,
       "trade_date": "2026-11-19",
-      "rank": 18
+      "rank": 18,
+      "name_en": "E.SUN Financial Holding Company, Ltd."
     },
     {
       "code": "2412",
-      "name": "Chunghwa Telecom Co., Ltd.",
+      "name": "中華電",
       "shares": 101435919,
       "weight": 0.73,
       "trade_date": "2026-11-19",
-      "rank": 19
+      "rank": 19,
+      "name_en": "Chunghwa Telecom Co., Ltd."
     },
     {
       "code": "2886",
-      "name": "Mega Financial Holding Co., Ltd.",
+      "name": "兆豐金",
       "shares": 314187546,
       "weight": 0.73,
       "trade_date": "2026-11-19",
-      "rank": 20
+      "rank": 20,
+      "name_en": "Mega Financial Holding Co., Ltd."
     }
   ],
   "source_warnings": [
