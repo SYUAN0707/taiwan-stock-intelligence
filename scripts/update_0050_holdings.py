@@ -170,7 +170,7 @@ def main():
             errors.append(str(exc))
             print("Source unavailable:", str(exc))
     if result is None:
-        raise RuntimeError("所有持股來源均未通過資料驗證；保留上一版，不覆寫檔案。\\n" + "\\n".join(errors))
+        raise RuntimeError("所有持股來源均未通過資料驗證；保留上一版，不覆寫檔案。\n" + "\n".join(errors))
 
     rows, source_date, source_url, source_name = result
     top = []
@@ -197,7 +197,7 @@ def main():
         "disclaimer": "本清單為0050基金實際股票持倉權重前20名，不等同臺灣50指數成分股排名。優先使用元大投信官方來源；官方來源無法讀取時才使用備援來源，頁面會標示來源。若來源日期超過7天、股票不足20檔或日期異常，將保留上一版，不以推測值替代。"
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8")
+    OUT.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Updated {OUT}: {len(top)} stocks, source={source_name}, date={source_date}, checked={now}")
 
 if __name__ == "__main__":
