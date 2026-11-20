@@ -23,13 +23,19 @@ HEADERS = {
 def parse_date(value):
     if not value:
         return ""
-    m = re.search(r"(20\d{2})[/-]?(\d{1,2})[/-]?(\d{1,2})", str(value))
-    if not m:
-        return ""
-    try:
-        return dt.date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
-    except ValueError:
-        return ""
+    s = str(value).strip()
+    m = re.search(r"(20\d{2})[/-]?(\d{1,2})[/-]?(\d{1,2})", s)
+    if m:
+        try:
+            return dt.date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
+        except ValueError:
+            return ""
+    for fmt in ("%b %d, %Y", "%B %d, %Y", "%d %b %Y"):
+        try:
+            return dt.datetime.strptime(s, fmt).date().isoformat()
+        except ValueError:
+            pass
+    return ""
 
 def normalize_code(value):
     s = str(value or "").strip()
