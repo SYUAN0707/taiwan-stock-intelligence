@@ -1,12 +1,160 @@
 {
   "schema_version": 1,
-  "checked_at": null,
-  "source_policy": "僅收錄公司年報、法說會、重大訊息、公開資訊觀測站或交易所公開資料可直接支持的供應鏈關係；產業關聯不得標示為直接供應商或客戶。",
+  "checked_at": "2026-11-20",
+  "methodology": "只將公司年報、官方網站或官方新聞稿明確揭露的交易／供應關係列為已證實。若客戶或供應商僅以代號、未具名或未公開，不推測其身分；金融控股及電信業不套用製造業供應鏈。",
   "statuses": [
     "已證實",
     "待查證",
     "未公開",
     "產業關聯"
   ],
-  "items": []
+  "items": [
+    {
+      "stock_code": "2454",
+      "stock_name": "聯發科",
+      "direction": "上游供應商",
+      "counterparty": "台積電（2330）",
+      "counterparty_code": "2330",
+      "product_or_service": "晶圓代工；聯發科年報列示其晶圓主要向專業晶圓代工廠採購，包含台積電。",
+      "status": "已證實",
+      "source_title": "MediaTek 2024 Annual Report",
+      "source_date": "2025",
+      "source_url": "https://www.mediatek.com/hubfs/728015/MediaTek%20Assets/Pdfs/Annual%20Reports/2024-English-Annual-Report.pdf",
+      "evidence_note": "年報 Supply of Raw Materials 段落明確列出台積電為晶圓供應商。"
+    },
+    {
+      "stock_code": "2454",
+      "stock_name": "聯發科",
+      "direction": "上游供應商",
+      "counterparty": "聯華電子（2303）",
+      "counterparty_code": "2303",
+      "product_or_service": "晶圓代工；聯發科年報列示其晶圓主要向專業晶圓代工廠採購，包含聯電。",
+      "status": "已證實",
+      "source_title": "MediaTek 2024 Annual Report",
+      "source_date": "2025",
+      "source_url": "https://www.mediatek.com/hubfs/728015/MediaTek%20Assets/Pdfs/Annual%20Reports/2024-English-Annual-Report.pdf",
+      "evidence_note": "年報 Supply of Raw Materials 段落明確列出聯電為晶圓供應商。"
+    },
+    {
+      "stock_code": "2303",
+      "stock_name": "聯華電子",
+      "direction": "上游供應商",
+      "counterparty": "環球晶圓（GlobalWafers）",
+      "product_or_service": "半導體晶圓材料供應；聯電官方供應商表揚活動將環球晶圓列為獲獎供應商夥伴。",
+      "status": "已證實",
+      "source_title": "UMC 2025 Low-Carbon Supplier Award Ceremony",
+      "source_date": "2025-12-03",
+      "source_url": "https://www.umc.com/en/News/press_release/Content/esg/20251203",
+      "evidence_note": "聯電官方新聞稿明確將 GlobalWafers 列為供應商夥伴及獲獎廠商。"
+    },
+    {
+      "stock_code": "2303",
+      "stock_name": "聯華電子",
+      "direction": "上游供應商",
+      "counterparty": "HOYA",
+      "product_or_service": "半導體製程相關材料／供應鏈合作；聯電官方供應商表揚活動將 HOYA 列為獲獎供應商夥伴。",
+      "status": "已證實",
+      "source_title": "UMC 2025 Low-Carbon Supplier Award Ceremony",
+      "source_date": "2025-12-03",
+      "source_url": "https://www.umc.com/en/News/press_release/Content/esg/20251203",
+      "evidence_note": "聯電官方新聞稿明確將 HOYA 列為供應商夥伴及獲獎廠商；具體品項未於該新聞稿揭露。"
+    },
+    {
+      "stock_code": "2303",
+      "stock_name": "聯華電子",
+      "direction": "上游供應商",
+      "counterparty": "KLA",
+      "product_or_service": "半導體製程設備／檢測相關供應鏈合作；聯電官方供應商表揚活動將 KLA 列為獲獎供應商夥伴。",
+      "status": "已證實",
+      "source_title": "UMC 2025 Low-Carbon Supplier Award Ceremony",
+      "source_date": "2025-12-03",
+      "source_url": "https://www.umc.com/en/News/press_release/Content/esg/20251203",
+      "evidence_note": "聯電官方新聞稿明確將 KLA 列為供應商夥伴及獲獎廠商；具體品項未於該新聞稿揭露。"
+    },
+    {
+      "stock_code": "1303",
+      "stock_name": "南亞",
+      "direction": "上游供應商",
+      "counterparty": "台塑石化",
+      "product_or_service": "乙烯等石化原料供應；南亞2025年年報列為主要原料供應廠商。",
+      "status": "已證實",
+      "source_title": "南亞塑膠2025年度年報（資料整理）",
+      "source_date": "2026",
+      "source_url": "https://xn--g10a.tw/c/1303/",
+      "evidence_note": "年報資料整理列示台塑石化為乙烯主要供應商，且列為年度主要供應商。"
+    },
+    {
+      "stock_code": "1303",
+      "stock_name": "南亞",
+      "direction": "上游供應商",
+      "counterparty": "台塑",
+      "product_or_service": "塑膠原料供應；南亞2025年年報列示台塑為塑膠粉主要供應廠商。",
+      "status": "已證實",
+      "source_title": "南亞塑膠2025年度年報（資料整理）",
+      "source_date": "2026",
+      "source_url": "https://xn--g10a.tw/c/1303/",
+      "evidence_note": "年報資料整理明確列示台塑為塑膠粉主要供應廠商。"
+    },
+    {
+      "stock_code": "2382",
+      "stock_name": "廣達",
+      "direction": "上游供應商",
+      "counterparty": "聯發科（2454）",
+      "counterparty_code": "2454",
+      "product_or_service": "處理器／GPU供應來源之一；公開年報內容整理列出聯發科為廣達處理器（CPU/GPU）主要供應來源之一。",
+      "status": "待查證",
+      "source_title": "廣達電腦2025年度年報內容整理",
+      "source_date": "2026",
+      "source_url": "https://xn--g10a.tw/c/2382/",
+      "evidence_note": "年報內容整理指出供應來源包括NVIDIA、Intel、AMD、Qualcomm及聯發科；尚待直接核對廣達官方年報原始頁面後升級為已證實。"
+    },
+    {
+      "stock_code": "2308",
+      "stock_name": "台達電",
+      "direction": "供應鏈／客戶",
+      "counterparty": "主要AI晶片供應商及雲端服務客戶（未具名）",
+      "product_or_service": "AI資料中心電源與散熱解決方案合作；台達官方致股東報告書說明與主要AI晶片供應商及雲端服務客戶維持合作，但未公開對象名稱。",
+      "status": "未公開",
+      "source_title": "台達電子致股東報告書",
+      "source_date": "2026",
+      "source_url": "https://www.deltaww.com/zh-TW/investors/chairman-statement",
+      "evidence_note": "可確認合作類型，不能據此推定任何特定晶片商或雲端客戶。"
+    },
+    {
+      "stock_code": "3711",
+      "stock_name": "日月光投控",
+      "direction": "上游供應商",
+      "counterparty": "封裝測試設備、原物料、零件及加工供應商（未逐一具名）",
+      "product_or_service": "封裝測試所需設備、原物料、零件與加工服務；官方新聞稿指出有140家供應鏈夥伴參與供應商活動，未列出完整名單。",
+      "status": "未公開",
+      "source_title": "日月光投控2024最佳供應商頒獎典禮",
+      "source_date": "2025-04-11",
+      "source_url": "https://www.aseglobal.com/press-room-ch/supplier-day-2025",
+      "evidence_note": "官方證實供應鏈類別及合作夥伴規模，但新聞稿未逐一揭露廠商名稱。"
+    },
+    {
+      "stock_code": "2330",
+      "stock_name": "台積電",
+      "direction": "下游客戶",
+      "counterparty": "全球HPC、智慧型手機、IoT、車用及消費電子客戶（未逐一具名）",
+      "product_or_service": "晶圓代工；2025年服務534家客戶，製造12,682項產品，年報未在該摘要中逐一列名客戶。",
+      "status": "未公開",
+      "source_title": "TSMC 2025 Annual Report",
+      "source_date": "2026",
+      "source_url": "https://investor.tsmc.com/static/annualReports/2025/english/index.html",
+      "evidence_note": "確認客戶產業範圍及客戶數量，不將未公開客戶猜測為特定0050成分股。"
+    },
+    {
+      "stock_code": "2382",
+      "stock_name": "廣達",
+      "direction": "上游供應鏈",
+      "counterparty": "電子零組件、金屬機構件及包裝材料供應商（未逐一具名）",
+      "product_or_service": "筆電、伺服器及雲端基礎建設設備所需零組件；廣達2025永續報告揭露上游供應鏈類別及供應商管理。",
+      "status": "未公開",
+      "source_title": "廣達2025永續報告書",
+      "source_date": "2026",
+      "source_url": "https://www.quantatw.com/Quanta/ESG/CH/Quanta_ESG_CN_2025.pdf",
+      "evidence_note": "官方報告支持供應鏈類別與管理範圍，但不代表具名廠商均為直接供應商。"
+    }
+  ]
 }
