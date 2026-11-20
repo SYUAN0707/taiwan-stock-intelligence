@@ -11,10 +11,11 @@
 const API_BASE=location.hostname==='taiwan-stock-intelligence.onrender.com'?'https://taiwan-stock-intelligence-api.onrender.com':'';
 const state={quotes:[],view:'market',query:'',market:'全部市場',sort:'volume',watch:JSON.parse(localStorage.getItem('tw-watch')||'[]'),selected:null};
 const $=id=>document.getElementById(id),fmt=(v,d=2)=>v==null?'—':Number(v).toLocaleString('zh-TW',{maximumFractionDigits:d}),dateLabel=v=>{if(!v)return '未取得';const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?Number(m[2])+'月'+Number(m[3])+'日':String(v)},cls=v=>v>0?'up':v<0?'down':'',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function fetchWithTimeout(url,options={},ms=25000){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),ms);try{return await fetch(url,{...options,signal:controller.signal})}catch(e){if(e.name==='AbortError')throw Error('伺服器回應逾時（超過 '+Math.round(ms/1000)+' 秒）。請按「重新載入」再試；若持續發生，需檢查 Render 後端服務。');throw e}finally{clearTimeout(timer)}}
 async function load(){
  $('notice').textContent='正在讀取證交所與櫃買中心官方每日收盤資料…';
  try{
-  const response=await fetch(API_BASE+'/api/quotes',{cache:'no-store'});
+  const response=await fetchWithTimeout(API_BASE+'/api/quotes',{cache:'no-store'},30000);
   if(!response.ok)throw Error('行情 API HTTP '+response.status);
   const q=await response.json();
   if(!Array.isArray(q.items)||!q.items.length)throw Error(q.error||q.errors?.join('；')||'官方每日行情目前沒有有效資料');
@@ -24,7 +25,7 @@ async function load(){
   $('notice').textContent=(q.disclaimer||'官方每日收盤行情，非即時報價。')+' '+marketDateStatus()+(q.errors?.length?'；部分來源異常：'+q.errors.join('／'):'');
   render();
  }catch(e){
-  $('notice').textContent='行情讀取失敗：'+e.message+'。請稍後重試；不顯示虛構行情。';
+  $('updated').textContent='行情讀取失敗';$('notice').textContent='行情讀取失敗：'+e.message+'。請稍後重試；不顯示虛構行情。';
   $('content').innerHTML='<div class="panel empty">目前無法取得官方每日收盤行情。請確認後端 API 與 Render 部署狀態，再重新載入。</div>';
  }
 }
@@ -43,7 +44,7 @@ else if(state.view==='supply'){ $('pageTitle').textContent='0050權值股供應�
 async function loadSupplyChain(){
  const c=$('content');
  try{
-  const r=await fetch(API_BASE+'/api/supply-chain',{cache:'no-store'});
+  const r=await fetchWithTimeout(API_BASE+'/api/supply-chain',{cache:'no-store'},20000);
   if(!r.ok)throw Error('供應鏈 API HTTP '+r.status);
   const d=await r.json(),h=d.holdings||{},rows=Array.isArray(h.items)?h.items:[],rels=Array.isArray(d.relations?.items)?d.relations.items:[];
   const byCode=new Map(state.quotes.map(x=>[x.code,x]));
