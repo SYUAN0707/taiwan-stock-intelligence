@@ -44,9 +44,7 @@ else if(state.view==='supply'){ $('pageTitle').textContent='0050權值股供應�
 async function loadSupplyChain(){
  const c=$('content');
  try{
-  let apiData={};
-  try{const apiResponse=await fetchWithTimeout(API_BASE+'/api/supply-chain',{cache:'no-store'},12000);if(apiResponse.ok)apiData=await apiResponse.json();}catch(apiError){console.warn('供應鏈 API 暫不可用，改讀 GitHub 最新資料',apiError);}
-  let h=apiData.holdings||{},rels=Array.isArray(apiData.relations?.items)?apiData.relations.items:[];
+  let h={},rels=[];
   try{
    const [hr,rr]=await Promise.all([
     fetch('https://raw.githubusercontent.com/SYUAN0707/taiwan-stock-intelligence/main/data/0050_holdings.json',{cache:'no-store'}),
@@ -54,7 +52,12 @@ async function loadSupplyChain(){
    ]);
    if(hr.ok){const latestHoldings=await hr.json();if(Array.isArray(latestHoldings.items)&&latestHoldings.items.length)h=latestHoldings;}
    if(rr.ok){const latestRelations=await rr.json();if(Array.isArray(latestRelations.items))rels=latestRelations.items;}
-  }catch(rawError){console.warn('GitHub 供應鏈資料讀取失敗，使用 API 資料',rawError);}
+  }catch(rawError){console.warn('GitHub 供應鏈資料讀取失敗，改用 API',rawError);}
+  if(!Array.isArray(h.items)||!h.items.length){
+   const apiResponse=await fetchWithTimeout(API_BASE+'/api/supply-chain',{cache:'no-store'},20000);
+   if(!apiResponse.ok)throw Error('供應鏈資料來源暫時無法讀取（API HTTP '+apiResponse.status+'）');
+   const apiData=await apiResponse.json();h=apiData.holdings||{};rels=Array.isArray(apiData.relations?.items)?apiData.relations.items:[];
+  }
   const rows=Array.isArray(h.items)?h.items:[];
   if(!rows.length)throw Error('0050持股資料暫時無法取得；請稍後重新整理。');
   const byCode=new Map(state.quotes.map(x=>[x.code,x]));
