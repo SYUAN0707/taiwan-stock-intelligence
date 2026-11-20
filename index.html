@@ -44,10 +44,9 @@ else if(state.view==='supply'){ $('pageTitle').textContent='0050權值股供應�
 async function loadSupplyChain(){
  const c=$('content');
  try{
-  const r=await fetchWithTimeout(API_BASE+'/api/supply-chain',{cache:'no-store'},20000);
-  if(!r.ok)throw Error('供應鏈 API HTTP '+r.status);
-  const apiData=await r.json();
-  let h=apiData.holdings||{}, rels=Array.isArray(apiData.relations?.items)?apiData.relations.items:[];
+  let apiData={};
+  try{const apiResponse=await fetchWithTimeout(API_BASE+'/api/supply-chain',{cache:'no-store'},12000);if(apiResponse.ok)apiData=await apiResponse.json();}catch(apiError){console.warn('供應鏈 API 暫不可用，改讀 GitHub 最新資料',apiError);}
+  let h=apiData.holdings||{},rels=Array.isArray(apiData.relations?.items)?apiData.relations.items:[];
   try{
    const [hr,rr]=await Promise.all([
     fetch('https://raw.githubusercontent.com/SYUAN0707/taiwan-stock-intelligence/main/data/0050_holdings.json',{cache:'no-store'}),
@@ -55,8 +54,9 @@ async function loadSupplyChain(){
    ]);
    if(hr.ok){const latestHoldings=await hr.json();if(Array.isArray(latestHoldings.items)&&latestHoldings.items.length)h=latestHoldings;}
    if(rr.ok){const latestRelations=await rr.json();if(Array.isArray(latestRelations.items))rels=latestRelations.items;}
-  }catch(ignore){}
+  }catch(rawError){console.warn('GitHub 供應鏈資料讀取失敗，使用 API 資料',rawError);}
   const rows=Array.isArray(h.items)?h.items:[];
+  if(!rows.length)throw Error('0050持股資料暫時無法取得；請稍後重新整理。');
   const byCode=new Map(state.quotes.map(x=>[x.code,x]));
   const stale=h.checked_at?('更新檢查時間：'+esc(h.checked_at)):'尚未完成第一次官方資料更新';
   const holdTable=rows.length?'<div class="tablewrap"><table><thead><tr><th>排名</th><th>股票</th><th>0050權重</th><th>官方收盤價</th><th>行情日期</th></tr></thead><tbody>'+rows.map(x=>{const q=byCode.get(String(x.code));return '<tr><td>'+esc(x.rank??'—')+'</td><td><b>'+esc(x.name)+'</b><span class="code">'+esc(x.code)+'</span></td><td>'+fmt(x.weight,3)+'%</td><td>'+(q?fmt(q.price):'—')+'</td><td>'+(q?dateLabel(q.trade_date):'尚無行情')+'</td></tr>'}).join('')+'</tbody></table></div>':'<div class="empty">尚無可用的0050官方持股快照。請至 GitHub Actions 執行「Refresh 0050 top holdings」，待首次更新成功後這裡會自動顯示；不使用舊的估算權重填補。</div>';
