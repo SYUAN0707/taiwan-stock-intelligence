@@ -1,0 +1,178 @@
+{
+  "fund_code": "0050",
+  "fund_name": "元大台灣50",
+  "ranking_basis": "依0050股票部位持股權重排序；不含期貨、現金及其他非股票資產",
+  "source_name": "StockAnalysis 0050 全部持股（次級備援來源）",
+  "source_type": "secondary_fallback",
+  "source_url": "https://stockanalysis.com/quote/tpe/0050/holdings/",
+  "source_date": "2026-11-19",
+  "checked_at": "2026-11-20T14:58:02+08:00",
+  "count": 20,
+  "items": [
+    {
+      "code": "2330",
+      "name": "Taiwan Semiconductor Manufacturing Company Limited",
+      "shares": 649584425,
+      "weight": 59.35,
+      "trade_date": "2026-11-19",
+      "rank": 1
+    },
+    {
+      "code": "2454",
+      "name": "MediaTek Inc.",
+      "shares": 39081436,
+      "weight": 6.32,
+      "trade_date": "2026-11-19",
+      "rank": 2
+    },
+    {
+      "code": "2317",
+      "name": "Hon Hai Precision Industry Co., Ltd.",
+      "shares": 324315688,
+      "weight": 3.11,
+      "trade_date": "2026-11-19",
+      "rank": 3
+    },
+    {
+      "code": "2308",
+      "name": "Delta Electronics, Inc.",
+      "shares": 51275380,
+      "weight": 2.23,
+      "trade_date": "2026-11-19",
+      "rank": 4
+    },
+    {
+      "code": "3711",
+      "name": "ASE Technology Holding Co., Ltd.",
+      "shares": 88130058,
+      "weight": 1.93,
+      "trade_date": "2026-11-19",
+      "rank": 5
+    },
+    {
+      "code": "2891",
+      "name": "CTBC Financial Holding Co., Ltd.",
+      "shares": 469963303,
+      "weight": 1.49,
+      "trade_date": "2026-11-19",
+      "rank": 6
+    },
+    {
+      "code": "2881",
+      "name": "Fubon Financial Holding Co., Ltd.",
+      "shares": 221599068,
+      "weight": 1.43,
+      "trade_date": "2026-11-19",
+      "rank": 7
+    },
+    {
+      "code": "1303",
+      "name": "Nan Ya Plastics Corporation",
+      "shares": 130882060,
+      "weight": 1.3,
+      "trade_date": "2026-11-19",
+      "rank": 8
+    },
+    {
+      "code": "2303",
+      "name": "United Microelectronics Corporation",
+      "shares": 309794552,
+      "weight": 1.19,
+      "trade_date": "2026-11-19",
+      "rank": 9
+    },
+    {
+      "code": "2882",
+      "name": "Cathay Financial Holding Co., Ltd.",
+      "shares": 253402823,
+      "weight": 1.14,
+      "trade_date": "2026-11-19",
+      "rank": 10
+    },
+    {
+      "code": "2383",
+      "name": "Elite Material Co., Ltd.",
+      "shares": 7713466,
+      "weight": 1.05,
+      "trade_date": "2026-11-19",
+      "rank": 11
+    },
+    {
+      "code": "2887",
+      "name": "TS Financial Holding Co., Ltd.",
+      "shares": 622406196,
+      "weight": 0.97,
+      "trade_date": "2026-11-19",
+      "rank": 12
+    },
+    {
+      "code": "3037",
+      "name": "Unimicron Technology Corp.",
+      "shares": 35035680,
+      "weight": 0.91,
+      "trade_date": "2026-11-19",
+      "rank": 13
+    },
+    {
+      "code": "3017",
+      "name": "Asia Vital Components Co., Ltd.",
+      "shares": 8498340,
+      "weight": 0.9,
+      "trade_date": "2026-11-19",
+      "rank": 14
+    },
+    {
+      "code": "2885",
+      "name": "Yuanta Financial Holding Co., Ltd.",
+      "shares": 304726931,
+      "weight": 0.84,
+      "trade_date": "2026-11-19",
+      "rank": 15
+    },
+    {
+      "code": "2382",
+      "name": "Quanta Computer Inc.",
+      "shares": 70262421,
+      "weight": 0.8,
+      "trade_date": "2026-11-19",
+      "rank": 16
+    },
+    {
+      "code": "2345",
+      "name": "Accton Technology Corporation",
+      "shares": 13161367,
+      "weight": 0.77,
+      "trade_date": "2026-11-19",
+      "rank": 17
+    },
+    {
+      "code": "2884",
+      "name": "E.SUN Financial Holding Company, Ltd.",
+      "shares": 424641993,
+      "weight": 0.75,
+      "trade_date": "2026-11-19",
+      "rank": 18
+    },
+    {
+      "code": "2412",
+      "name": "Chunghwa Telecom Co., Ltd.",
+      "shares": 101435919,
+      "weight": 0.73,
+      "trade_date": "2026-11-19",
+      "rank": 19
+    },
+    {
+      "code": "2886",
+      "name": "Mega Financial Holding Co., Ltd.",
+      "shares": 314187546,
+      "weight": 0.73,
+      "trade_date": "2026-11-19",
+      "rank": 20
+    }
+  ],
+  "source_warnings": [
+    "元大舊 API 未回傳 JSON（HTTP 200，Content-Type=text/html; charset=utf-8，最終網址=https://www.yuantaetfs.com/api/StkWeights?date=&fundid=1066）。",
+    "元大投信官方持股頁 僅解析到 0 檔股票，至少需要20檔。"
+  ],
+  "disclaimer": "本清單為0050基金實際股票持倉權重前20名，不等同臺灣50指數成分股排名。優先使用元大投信官方來源；官方來源無法讀取時才使用備援來源，頁面會標示來源。若來源日期超過7天、股票不足20檔或日期異常，將保留上一版，不以推測值替代。"
+}
